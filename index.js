@@ -7,6 +7,22 @@ const DESC = '闲暇阅读 [30-seconds-of-code](https://github.com/30-seconds/30
 
 const underPath = name => path.resolve(__dirname, `snippets_trans/${name}`);
 
+const EMOJIS = {
+  'adapter': '🔌',
+  'array': '📚',
+  'browser': '🌐',
+  'date': '⏱️',
+  'function': '🎛️',
+  'logic': '🔮',
+  'math': '➗',
+  'media': '📺',
+  'node': '📦',
+  'object': '🗃️',
+  'string': '📜',
+  'type': '📃',
+  'utility': '🔧',
+};
+
 const markdown = [
   `${HEAD}\n`,
   `${DESC}\n`,
@@ -23,7 +39,7 @@ Object.entries(doc).forEach(([tag, arr]) => {
     }
   });
   if (contents.length) {
-    contents.unshift(`## ${tag}\n`);
+    contents.unshift(`## ${EMOJIS[tag]} ${tag}\n`);
     markdown.push(...contents);
   }
 });

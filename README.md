@@ -2,7 +2,7 @@
 
 闲暇阅读 [30-seconds-of-code](https://github.com/30-seconds/30-seconds-of-code) 里的代码。
 
-## adapter
+## 🔌 adapter
 
 ### ary
 
@@ -55,7 +55,7 @@ let p3 = new Promise(resolve => setTimeout(resolve, 2000, 3));
 Pall(p1, p2, p3).then(console.log); // [1, 2, 3] (after about 2 seconds)
 ```
 
-## array
+## 📚 array
 
 ### all
 
@@ -183,7 +183,7 @@ const compact = arr => arr.filter(Boolean);
 compact([0, 1, false, 2, '', 3, 'a', 'e' * 23, NaN, 's', 34]); // [ 1, 2, 3, 'a', 's', 34 ]
 ```
 
-## browser
+## 🌐 browser
 
 ### arrayToHtmlList
 
@@ -219,7 +219,7 @@ const bottomVisible = () =>
 bottomVisible(); // true
 ```
 
-## function
+## 🎛️ function
 
 ### attempt
 
@@ -319,7 +319,7 @@ chainAsync([
 ]);
 ```
 
-## math
+## ➗ math
 
 ### approximatelyEqual
 
@@ -415,7 +415,7 @@ clampNumber(2, 3, 5); // 3
 clampNumber(1, -1, -5); // -1
 ```
 
-## node
+## 📦 node
 
 ### atob
 
@@ -478,7 +478,7 @@ console.log(colorize('foo', 'bar').bgBlue); // 'foo bar' (blue background)
 console.log(colorize(colorize('foo').yellow, colorize('foo').green).bgWhite); // 'foo bar' (first word in yellow letters, second word in green letters, white background for both)
 ```
 
-## object
+## 🗃️ object
 
 ### bindAll
 
@@ -509,7 +509,7 @@ bindAll(view, 'click');
 jQuery(element).on('click', view.click); // Logs 'clicked docs' when clicked.
 ```
 
-## string
+## 📜 string
 
 ### byteSize
 
@@ -571,7 +571,7 @@ compactWhitespace('Lorem    Ipsum'); // 'Lorem Ipsum'
 compactWhitespace('Lorem \n Ipsum'); // 'Lorem Ipsum'
 ```
 
-## utility
+## 🔧 utility
 
 ### castArray
 
