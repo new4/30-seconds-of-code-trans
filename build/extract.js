@@ -2,18 +2,13 @@ const fs = require('fs');
 const path = require('path');
 const {
   flatten,
-  toLower,
 } = require('lodash');
 
-const objectFromPairs = arr => arr.reduce((acc, curValue) => ((acc[curValue[0]] = curValue[1]), acc), {}); // eslint-disable-line
+const {
+  strSortFn,
+} = require('./utils');
 
-const strSortFn = (a, b) => {
-  a = toLower(a);
-  b = toLower(b);
-  if (a < b) { return -1; }
-  if (a > b) { return 1; }
-  return 0;
-};
+const objectFromPairs = arr => arr.reduce((acc, curValue) => ((acc[curValue[0]] = curValue[1]), acc), {}); // eslint-disable-line
 
 const TAG_DB_PATH = path.resolve(__dirname, '../tag_database');
 const OUTPUT = path.resolve(__dirname, '../db.yml');

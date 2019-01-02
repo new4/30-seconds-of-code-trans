@@ -4,8 +4,9 @@
   "description": "reading 30-seconds-of-code",
   "main": "index.js",
   "scripts": {
+    "next": "node ./build/get.js",
     "extract": "node ./build/extract.js",
-    "markdown": "node ./index.js",
+    "readme": "node ./index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -28,7 +29,11 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm run markdown"
+      "pre-commit": "npm run readme"
     }
+  },
+  "dependencies": {
+    "@new4/utils": "0.0.23",
+    "fs-extra": "^7.0.1"
   }
 }
