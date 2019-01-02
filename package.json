@@ -1,0 +1,26 @@
+{
+  "name": "30-seconds-of-code-trans",
+  "version": "1.0.0",
+  "description": "reading 30-seconds-of-code",
+  "main": "index.js",
+  "scripts": {
+    "extract": "node ./build/extract.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/new4/30-seconds-of-code-trans.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/new4/30-seconds-of-code-trans/issues"
+  },
+  "homepage": "https://github.com/new4/30-seconds-of-code-trans#readme",
+  "devDependencies": {
+    "eslint": "^5.11.1",
+    "eslint-config-new4-eslintrc": "^0.4.4",
+    "lodash": "^4.17.11"
+  }
+}
