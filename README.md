@@ -19,6 +19,26 @@ const firstTwoMax = ary(Math.max, 2);
 [[2, 6, 'a'], [8, 4, 6], [10]].map(x => firstTwoMax(...x)); // [6, 8, 10]
 ```
 
+### call
+
+给定一个键名（在上下文中可以通过它找到一个方法）和一系列参数，在给定一个上下文时调用它们。组合模式中比较有用。
+
+使用闭包
+
+```js
+const call = (key, ...args) => context => context[key](...args);
+```
+
+```js
+Promise.resolve([1, 2, 3])
+  .then(call('map', x => 2 * x))
+  .then(console.log); // [ 2, 4, 6 ]
+const map = call.bind(null, 'map');
+Promise.resolve([1, 2, 3])
+  .then(map(x => 2 * x))
+  .then(console.log); // [ 2, 4, 6 ]
+```
+
 ## array
 
 ### all
@@ -136,6 +156,22 @@ const arrayToHtmlList = (arr, listID) =>
 arrayToHtmlList(['item 1', 'item 2'], 'myListID');
 ```
 
+### bottomVisible
+
+页面底部可见时返回 `true`, 否则返回 `false`
+
+使用 `scrollY`, `scrollHeight` 和 `clientHeight` 来进行检测
+
+```js
+const bottomVisible = () =>
+  document.documentElement.clientHeight + window.scrollY >=
+  (document.documentElement.scrollHeight || document.documentElement.clientHeight);
+```
+
+```js
+bottomVisible(); // true
+```
+
 ## function
 
 ### attempt
@@ -202,6 +238,40 @@ const freddyBound = bindKey(freddy, 'greet');
 console.log(freddyBound('hi', '!')); // 'hi fred!'
 ```
 
+### chainAsync
+
+链式 `async` 函数
+
+遍历含有异步操作的数组，在异步操作完成后调用 `next` 方法。
+
+```js
+const chainAsync = fns => {
+  let curr = 0;
+  const last = fns[fns.length - 1];
+  const next = () => {
+    const fn = fns[curr++];
+    fn === last ? fn() : fn(next);
+  };
+  next();
+};
+```
+
+```js
+chainAsync([
+  next => {
+    console.log('0 seconds');
+    setTimeout(next, 1000);
+  },
+  next => {
+    console.log('1 second');
+    setTimeout(next, 1000);
+  },
+  () => {
+    console.log('2 second');
+  }
+]);
+```
+
 ## math
 
 ### approximatelyEqual
@@ -254,6 +324,37 @@ averageBy([{ n: 4 }, { n: 2 }, { n: 8 }, { n: 6 }], o => o.n); // 5
 averageBy([{ n: 4 }, { n: 2 }, { n: 8 }, { n: 6 }], 'n'); // 5
 ```
 
+### binomialCoefficient
+
+计算两个整数 `n` 和 `k` 的二项式系数
+
+使用 `Number.isNaN()` 来检查 `n` 和 `k` 是否为 `NaN`
+
+检查 `k<0`, `k>=n`, `k==1` 或者 `k==n-1` 的情况并返回合适的值
+
+若 `n - k < k` 就交换他们的值
+
+从 `2` 到 `k` 的循环计算二项式系数
+
+使用 `Math.round()` 计算舍入误差
+
+```js
+const binomialCoefficient = (n, k) => {
+  if (Number.isNaN(n) || Number.isNaN(k)) return NaN;
+  if (k < 0 || k > n) return 0;
+  if (k === 0 || k === n) return 1;
+  if (k === 1 || k === n - 1) return n;
+  if (n - k < k) k = n - k;
+  let res = n;
+  for (let j = 2; j <= k; j++) res *= (n - j + 1) / j;
+  return Math.round(res);
+};
+```
+
+```js
+binomialCoefficient(8, 2); // 28
+```
+
 ## node
 
 ### atob
@@ -268,6 +369,20 @@ const atob = str => Buffer.from(str, 'base64').toString('binary');
 
 ```js
 atob('Zm9vYmFy'); // 'foobar'
+```
+
+### btoa
+
+从一个字符串（其每个字符都被视作一字节二进制数据处理）创建一个 `Base64` 编码的 `ASCII` 字串，
+
+用给定的字串创建一个 `Buffer`，指定编码为 `binary`，随后使用 `Buffer.toString('base64')` 解码。
+
+```js
+const btoa = str => Buffer.from(str, 'binary').toString('base64');
+```
+
+```js
+btoa('foobar'); // 'Zm9vYmFy'
 ```
 
 ## object
@@ -299,4 +414,66 @@ var view = {
 };
 bindAll(view, 'click');
 jQuery(element).on('click', view.click); // Logs 'clicked docs' when clicked.
+```
+
+## string
+
+### byteSize
+
+返回字符串的字节长度
+
+将给定的字符串转换成 [`Blob` 对象](https://developer.mozilla.org/zh-CN/docs/Web/API/Blob) 并返回它的 `size` 属性
+
+```js
+const byteSize = str => new Blob([str]).size;
+```
+
+```js
+byteSize('😀'); // 4
+byteSize('Hello World'); // 11
+```
+
+### capitalize
+
+将一个字符串的首字母转换成大写形式
+
+使用解构方式分出字符串的首字母和剩余字母
+
+```js
+const capitalize = ([first, ...rest], lowerRest = false) =>
+  first.toUpperCase() + (lowerRest ? rest.join('').toLowerCase() : rest.join(''));
+```
+
+```js
+capitalize('fooBar'); // 'FooBar'
+capitalize('fooBar', true); // 'Foobar'
+```
+
+### capitalizeEveryWord
+
+将字符串中的每个单词首字母转换成大写形式
+
+使用 `String.prototype.replace()` 匹配每个单词的首字母，并使用 `String.prototype.toUpperCase()` 将其转换成大写形式
+
+```js
+const capitalizeEveryWord = str => str.replace(/\b[a-z]/g, char => char.toUpperCase());
+```
+
+```js
+capitalizeEveryWord('hello world!'); // 'Hello World!'
+```
+
+## utility
+
+### castArray
+
+若给定值不是一个数组，则将其转化成一个数组
+
+```js
+const castArray = val => (Array.isArray(val) ? val : [val]);
+```
+
+```js
+castArray('foo'); // ['foo']
+castArray([1]); // [1]
 ```
