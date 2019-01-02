@@ -8,9 +8,11 @@ const {
   underPath,
   colorStr: {
     cyan,
+    yellow,
   },
   log: {
-    logBoth,
+    logBefore,
+    logAfter,
     faillogBoth,
   },
 } = require('@new4/utils');
@@ -38,4 +40,5 @@ fse.copySync(
   underPath(SNIPPETS_TRANS, next),
 );
 
-logBoth(cyan(`${unReadList.length} left`));
+logBefore(cyan(`Total:${srcFiles.length}`));
+logAfter(yellow(` Left:${unReadList.length}`));

@@ -39,6 +39,22 @@ Promise.resolve([1, 2, 3])
   .then(console.log); // [ 2, 4, 6 ]
 ```
 
+### collectInto
+
+将接受数组参数的函数更改为接受变量的函数
+
+```js
+const collectInto = fn => (...args) => fn(args);
+```
+
+```js
+const Pall = collectInto(Promise.all.bind(Promise));
+let p1 = Promise.resolve(1);
+let p2 = Promise.resolve(2);
+let p3 = new Promise(resolve => setTimeout(resolve, 2000, 3));
+Pall(p1, p2, p3).then(console.log); // [1, 2, 3] (after about 2 seconds)
+```
+
 ## array
 
 ### all
@@ -134,6 +150,37 @@ const bifurcateBy = (arr, fn) =>
 
 ```js
 bifurcateBy(['beep', 'boop', 'foo', 'bar'], x => x[0] === 'b'); // [ ['beep', 'boop', 'bar'], ['foo'] ]
+```
+
+### chunk
+
+将数组分割成指定大小的多个小数组
+
+使用 `Array.from()` 创建一个符合最终大小的数组，使用 `Array.prototype.slice()` 获取 `size` 大小的组
+
+```js
+const chunk = (arr, size) =>
+  Array.from({ length: Math.ceil(arr.length / size) }, (v, i) =>
+    arr.slice(i * size, i * size + size)
+  );
+```
+
+```js
+chunk([1, 2, 3, 4, 5], 2); // [[1,2],[3,4],[5]]
+```
+
+### compact
+
+移除数组中的假值
+
+使用 `Array.prototype.filter()` 过滤掉数组中的假值 (`false`, `null`, `0`, `""`, `undefined`, and `NaN`).
+
+```js
+const compact = arr => arr.filter(Boolean);
+```
+
+```js
+compact([0, 1, false, 2, '', 3, 'a', 'e' * 23, NaN, 's', 34]); // [ 1, 2, 3, 'a', 's', 34 ]
 ```
 
 ## browser
@@ -355,6 +402,19 @@ const binomialCoefficient = (n, k) => {
 binomialCoefficient(8, 2); // 28
 ```
 
+### clampNumber
+
+若 `num` 在区间 `a` 和 `b` 内，返回 `num`; 否则返回较近的区间边界值
+
+```js
+const clampNumber = (num, a, b) => Math.max(Math.min(num, Math.max(a, b)), Math.min(a, b));
+```
+
+```js
+clampNumber(2, 3, 5); // 3
+clampNumber(1, -1, -5); // -1
+```
+
 ## node
 
 ### atob
@@ -383,6 +443,39 @@ const btoa = str => Buffer.from(str, 'binary').toString('base64');
 
 ```js
 btoa('foobar'); // 'Zm9vYmFy'
+```
+
+### colorize
+
+将特殊字符添加到文本中以在控制台中打印颜色 (联合 `console.log()` 使用).
+
+对于背景色，在字符串最后加上一些特殊字符来设置背景色
+
+```js
+const colorize = (...args) => ({
+  black: `\x1b[30m${args.join(' ')}`,
+  red: `\x1b[31m${args.join(' ')}`,
+  green: `\x1b[32m${args.join(' ')}`,
+  yellow: `\x1b[33m${args.join(' ')}`,
+  blue: `\x1b[34m${args.join(' ')}`,
+  magenta: `\x1b[35m${args.join(' ')}`,
+  cyan: `\x1b[36m${args.join(' ')}`,
+  white: `\x1b[37m${args.join(' ')}`,
+  bgBlack: `\x1b[40m${args.join(' ')}\x1b[0m`,
+  bgRed: `\x1b[41m${args.join(' ')}\x1b[0m`,
+  bgGreen: `\x1b[42m${args.join(' ')}\x1b[0m`,
+  bgYellow: `\x1b[43m${args.join(' ')}\x1b[0m`,
+  bgBlue: `\x1b[44m${args.join(' ')}\x1b[0m`,
+  bgMagenta: `\x1b[45m${args.join(' ')}\x1b[0m`,
+  bgCyan: `\x1b[46m${args.join(' ')}\x1b[0m`,
+  bgWhite: `\x1b[47m${args.join(' ')}\x1b[0m`
+});
+```
+
+```js
+console.log(colorize('foo').red); // 'foo' (red letters)
+console.log(colorize('foo', 'bar').bgBlue); // 'foo bar' (blue background)
+console.log(colorize(colorize('foo').yellow, colorize('foo').green).bgWhite); // 'foo bar' (first word in yellow letters, second word in green letters, white background for both)
 ```
 
 ## object
@@ -463,6 +556,21 @@ const capitalizeEveryWord = str => str.replace(/\b[a-z]/g, char => char.toUpperC
 capitalizeEveryWord('hello world!'); // 'Hello World!'
 ```
 
+### compactWhitespace
+
+返回一个去除了多余空白字符的字符串
+
+使用 `String.prototype.replace()` 和一个正则表达式替换出现 2 次及以上空白字符为 1 个空白字符
+
+```js
+const compactWhitespace = str => str.replace(/\s{2,}/g, ' ');
+```
+
+```js
+compactWhitespace('Lorem    Ipsum'); // 'Lorem Ipsum'
+compactWhitespace('Lorem \n Ipsum'); // 'Lorem Ipsum'
+```
+
 ## utility
 
 ### castArray
@@ -476,4 +584,48 @@ const castArray = val => (Array.isArray(val) ? val : [val]);
 ```js
 castArray('foo'); // ['foo']
 castArray([1]); // [1]
+```
+
+### cloneRegExp
+
+克隆一个正则表达式
+
+使用 `new RegExp()`, `RegExp.source` 和 `RegExp.flags` 来克隆
+
+```js
+const cloneRegExp = regExp => new RegExp(regExp.source, regExp.flags);
+```
+
+```js
+const regExp = /lorem ipsum/gi;
+const regExp2 = cloneRegExp(regExp); // /lorem ipsum/gi
+```
+
+### coalesce
+
+返回第一个非 `null`/`undefined` 的参数
+
+使用 [`Array.prototype.find()`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Array/find)
+
+```js
+const coalesce = (...args) => args.find(_ => ![undefined, null].includes(_));
+```
+
+```js
+coalesce(null, undefined, '', NaN, 'Waldo'); // ""
+```
+
+### coalesceFactory
+
+返回一个自定义函数，该函数返回第一个使得验证函数返回真值的参数
+
+使用 `Array.prototype.find()` 
+
+```js
+const coalesceFactory = valid => (...args) => args.find(valid);
+```
+
+```js
+const customCoalesce = coalesceFactory(_ => ![null, undefined, '', NaN].includes(_));
+customCoalesce(undefined, null, NaN, '', 'Waldo'); // "Waldo"
 ```
