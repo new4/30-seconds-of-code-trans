@@ -28,7 +28,7 @@
   },
   "husky": {
     "hooks": {
-      "applypatch-msg": "npm run markdown"
+      "pre-commit": "npm run markdown"
     }
   }
 }
