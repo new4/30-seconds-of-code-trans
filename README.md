@@ -2,6 +2,23 @@
 
 闲暇阅读 [30-seconds-of-code](https://github.com/30-seconds/30-seconds-of-code) 里的代码。
 
+## adapter
+
+### ary
+
+创建一个至多只接受 `n` 个参数的函数，它会弃掉多余的参数
+
+使用 `Array.prototype.slice(0,n)` 和扩展运算符 `...` 来保证只接受至多 `n` 的参数
+
+```js
+const ary = (fn, n) => (...args) => fn(...args.slice(0, n));
+```
+
+```js
+const firstTwoMax = ary(Math.max, 2);
+[[2, 6, 'a'], [8, 4, 6], [10]].map(x => firstTwoMax(...x)); // [6, 8, 10]
+```
+
 ## array
 
 ### all
@@ -47,6 +64,46 @@ const any = (arr, fn = Boolean) => arr.some(fn);
 ```js
 any([0, 1, 2, 0], x => x >= 2); // true
 any([0, 0, 1, 0]); // true
+```
+
+### arrayToCSV
+
+将一个二维数组转换成用逗号分隔的字符串。
+
+使用 `Array.prototype.map()` 和 `Array.prototype.join(delimiter)` 来转换一维数组（行）
+
+使用 `Array.prototype.join('\n')` 来将行合并成一个换行的字符串
+
+分隔符参数 `delimiter` 默认为 `,`
+
+```js
+const arrayToCSV = (arr, delimiter = ',') =>
+  arr.map(v => v.map(x => `"${x}"`).join(delimiter)).join('\n');
+```
+
+```js
+arrayToCSV([['a', 'b'], ['c', 'd']]); // '"a","b"\n"c","d"'
+arrayToCSV([['a', 'b'], ['c', 'd']], ';'); // '"a";"b"\n"c";"d"'
+```
+
+## browser
+
+### arrayToHtmlList
+
+将给定的数组元素转换成 `<li>` 标签元素，并将结果加到指定了 `id` 的元素内部去
+
+使用 `Array.prototype.map()`, `document.querySelector()`, 和一个匿名闭包函数实现
+
+```js
+const arrayToHtmlList = (arr, listID) =>
+  (el => (
+    (el = document.querySelector('#' + listID)),
+    (el.innerHTML += arr.map(item => `<li>${item}</li>`).join(''))
+  ))();
+```
+
+```js
+arrayToHtmlList(['item 1', 'item 2'], 'myListID');
 ```
 
 ## math
