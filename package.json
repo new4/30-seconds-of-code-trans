@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "extract": "node ./build/extract.js",
+    "markdown": "node ./index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -21,6 +22,7 @@
   "devDependencies": {
     "eslint": "^5.11.1",
     "eslint-config-new4-eslintrc": "^0.4.4",
+    "js-yaml": "^3.12.0",
     "lodash": "^4.17.11"
   }
 }
