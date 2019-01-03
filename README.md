@@ -491,6 +491,35 @@ const forEachRight = (arr, callback) =>
 forEachRight([1, 2, 3, 4], val => console.log(val)); // '4', '3', '2', '1'
 ```
 
+### groupBy
+
+按照一定规则对数组元素分组，键值是指定函数执行的结果
+
+```js
+const groupBy = (arr, fn) =>
+  arr.map(typeof fn === 'function' ? fn : val => val[fn]).reduce((acc, val, i) => {
+    acc[val] = (acc[val] || []).concat(arr[i]);
+    return acc;
+  }, {});
+```
+
+```js
+groupBy([6.1, 4.2, 6.3], Math.floor); // {4: [4.2], 6: [6.1, 6.3]}
+groupBy(['one', 'two', 'three'], 'length'); // {3: ['one', 'two'], 5: ['three']}
+```
+
+### head
+
+返回数组的第一个元素
+
+```js
+const head = arr => arr[0];
+```
+
+```js
+head([1, 2, 3]); // 1
+```
+
 </details>
 
 ## 🌐 browser
@@ -753,6 +782,118 @@ elementIsVisibleInViewport(el); // false - (not fully visible)
 elementIsVisibleInViewport(el, true); // true - (partially visible)
 ```
 
+### getImages
+
+获取某一元素下的所有 `<img>` 图片
+
+`includeDuplicates` 用于去重，使用 `Set` 去重
+
+```js
+const getImages = (el, includeDuplicates = false) => {
+  const images = [...el.getElementsByTagName('img')].map(img => img.getAttribute('src'));
+  return includeDuplicates ? images : [...new Set(images)];
+};
+```
+
+```js
+getImages(document, true); // ['image1.jpg', 'image2.png', 'image1.png', '...']
+getImages(document, false); // ['image1.jpg', 'image2.png', '...']
+```
+
+### getScrollPosition
+
+获取当前页面的滚动位置
+
+```js
+const getScrollPosition = (el = window) => ({
+  x: el.pageXOffset !== undefined ? el.pageXOffset : el.scrollLeft,
+  y: el.pageYOffset !== undefined ? el.pageYOffset : el.scrollTop
+});
+```
+
+```js
+getScrollPosition(); // {x: 0, y: 200}
+```
+
+### getStyle
+
+获取元素的 `CSS` 样式值
+
+使用 `Window.getComputedStyle()`
+
+```js
+const getStyle = (el, ruleName) => getComputedStyle(el)[ruleName];
+```
+
+```js
+getStyle(document.querySelector('p'), 'font-size'); // '16px'
+```
+
+### hasClass
+
+指定元素是否含有类 `className`
+
+使用 `element.classList.contains()` （IE9不支持）
+
+```js
+const hasClass = (el, className) => el.classList.contains(className);
+```
+
+```js
+hasClass(document.querySelector('p.special'), 'special'); // true
+```
+
+### hashBrowser
+
+用 [SHA-256](https://en.wikipedia.org/wiki/SHA-2) 算法创建某个值的哈希值，返回一个 `Promise`
+
+使用 [SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto) API（兼容性不佳）来创建
+
+```js
+const hashBrowser = val =>
+  crypto.subtle.digest('SHA-256', new TextEncoder('utf-8').encode(val)).then(h => {
+    let hexes = [],
+      view = new DataView(h);
+    for (let i = 0; i < view.byteLength; i += 4)
+      hexes.push(('00000000' + view.getUint32(i).toString(16)).slice(-8));
+    return hexes.join('');
+  });
+```
+
+```js
+hashBrowser(JSON.stringify({ a: 'a', b: [1, 2, 3, 4], foo: { c: 'bar' } })).then(console.log); // '04aa106279f5977f59f9067fa9712afc4aedc6f5862a8defc34552d8c7206393'
+```
+
+### hide
+
+隐藏指定的所有元素
+
+```js
+const hide = (...el) => [...el].forEach(e => (e.style.display = 'none'));
+```
+
+```js
+hide(document.querySelectorAll('img')); // Hides all <img> elements on the page
+```
+
+### httpsRedirect
+
+若当前页面是 `HTTP` 的，将其重定向到 `HTTPS`，同时保证点击返回按钮是不能回到 `HTTP` 的页面的
+
+使用 `location.protocol` 获取当前正在使用的协议
+
+使用 `location.replace()` 替换
+
+```js
+const httpsRedirect = () => {
+  if (location.protocol !== 'https:') location.replace('https://' + location.href.split('//')[1]);
+};
+```
+
+```js
+httpsRedirect(); // If you are on http://mydomain.com, you are redirected to https://mydomain.com
+```
+
 </details>
 
 ## ⏱️ date
@@ -827,6 +968,28 @@ const getDaysDiffBetweenDates = (dateInitial, dateFinal) =>
 
 ```js
 getDaysDiffBetweenDates(new Date('2017-12-13'), new Date('2017-12-22')); // 9
+```
+
+### getMeridiemSuffixOfInteger
+
+根据数字计算 `am` 或 `pm` 表示的时间
+
+```js
+const getMeridiemSuffixOfInteger = num =>
+  num === 0 || num === 24
+    ? 12 + 'am'
+    : num === 12
+      ? 12 + 'pm'
+      : num < 12
+        ? (num % 12) + 'am'
+        : (num % 12) + 'pm';
+```
+
+```js
+getMeridiemSuffixOfInteger(0); // "12am"
+getMeridiemSuffixOfInteger(11); // "11am"
+getMeridiemSuffixOfInteger(13); // "1pm"
+getMeridiemSuffixOfInteger(25); // "1pm"
 ```
 
 </details>
@@ -1098,6 +1261,41 @@ const functionName = fn => (console.debug(fn.name), fn);
 functionName(Math.max); // max (logged in debug channel of console)
 ```
 
+### hz
+
+返回一个函数每秒执行的次数
+
+`hz` 是 `hertz` 的单位, 代表频率
+
+使用 `performance.now()` 获取执行前后的时间
+
+```js
+const hz = (fn, iterations = 100) => {
+  const before = performance.now();
+  for (let i = 0; i < iterations; i++) fn();
+  return (1000 * iterations) / (performance.now() - before);
+};
+```
+
+```js
+// 10,000 element array
+const numbers = Array(10000)
+  .fill()
+  .map((_, i) => i);
+
+// Test functions with the same goal: sum up the elements in the array
+const sumReduce = () => numbers.reduce((acc, n) => acc + n, 0);
+const sumForLoop = () => {
+  let sum = 0;
+  for (let i = 0; i < numbers.length; i++) sum += numbers[i];
+  return sum;
+};
+
+// `sumForLoop` is nearly 10 times faster
+Math.round(hz(sumReduce)); // 572
+Math.round(hz(sumForLoop)); // 4784
+```
+
 </details>
 
 ## ➗ math
@@ -1358,6 +1556,20 @@ geometricProgression(256, 3); // [3, 6, 12, 24, 48, 96, 192]
 geometricProgression(256, 1, 4); // [1, 4, 16, 64, 256]
 ```
 
+### hammingDistance
+
+计算两个值之间的汉明距离
+
+使用异或操作符 (`^`) 找到两个数之间的差异值，将其转换成2进制的字串并统计 `1` 出现的次数
+
+```js
+const hammingDistance = (num1, num2) => ((num1 ^ num2).toString(2).match(/1/g) || '').length;
+```
+
+```js
+hammingDistance(2, 3); // 1
+```
+
 </details>
 
 ## 📦 node
@@ -1425,6 +1637,51 @@ const colorize = (...args) => ({
 console.log(colorize('foo').red); // 'foo' (red letters)
 console.log(colorize('foo', 'bar').bgBlue); // 'foo bar' (blue background)
 console.log(colorize(colorize('foo').yellow, colorize('foo').green).bgWhite); // 'foo bar' (first word in yellow letters, second word in green letters, white background for both)
+```
+
+### hasFlags
+
+检查当前进程参数是否包含指定的标志
+
+使用 `Array.prototype.every()` 和 `Array.prototype.includes()` 检查 `process.argv` 
+
+```js
+const hasFlags = (...flags) =>
+  flags.every(flag => process.argv.includes(/^-{1,2}/.test(flag) ? flag : '--' + flag));
+```
+
+```js
+// node myScript.js -s --test --cool=true
+hasFlags('-s'); // true
+hasFlags('--test', 'cool=true', '-s'); // true
+hasFlags('special'); // false
+```
+
+### hashNode
+
+用 [SHA-256](https://en.wikipedia.org/wiki/SHA-2) 算法创建某个值的哈希值，返回一个 `Promise`
+
+使用 `crypto` API（兼容性不佳）来创建
+
+```js
+const crypto = require('crypto');
+const hashNode = val =>
+  new Promise(resolve =>
+    setTimeout(
+      () =>
+        resolve(
+          crypto
+            .createHash('sha256')
+            .update(val)
+            .digest('hex')
+        ),
+      0
+    )
+  );
+```
+
+```js
+hashNode(JSON.stringify({ a: 'a', b: [1, 2, 3, 4], foo: { c: 'bar' } })).then(console.log); // '04aa106279f5977f59f9067fa9712afc4aedc6f5862a8defc34552d8c7206393'
 ```
 
 </details>
@@ -1961,6 +2218,42 @@ fromCamelCase('someLabelThatNeedsToBeCamelized', '-'); // 'some-label-that-needs
 fromCamelCase('someJavascriptProperty', '_'); // 'some_javascript_property'
 ```
 
+### indentString
+
+缩进每行字串
+
+匹配每行的开始处并加上缩进部分
+
+```js
+const indentString = (str, count, indent = ' ') => str.replace(/^/gm, indent.repeat(count));
+```
+
+```js
+indentString('Lorem\nIpsum', 2); // '  Lorem\n  Ipsum'
+indentString('Lorem\nIpsum', 2, '_'); // '__Lorem\n__Ipsum'
+```
+
+</details>
+
+## 📃 type
+
+<details>
+
+<summary>展开</summary>
+
+### getType
+
+获取一个值得原生类型
+
+```js
+const getType = v =>
+  v === undefined ? 'undefined' : v === null ? 'null' : v.constructor.name.toLowerCase();
+```
+
+```js
+getType(new Set([1, 2, 3])); // 'set'
+```
+
 </details>
 
 ## 🔧 utility
@@ -2043,6 +2336,137 @@ const extendHex = shortHex =>
 ```js
 extendHex('#03f'); // '#0033ff'
 extendHex('05a'); // '#0055aa'
+```
+
+### getURLParameters
+
+获取 `URL` 中的参数对象
+
+可以传入 `location.search` 作为当前的 `url` 参数
+
+```js
+const getURLParameters = url =>
+  (url.match(/([^?=&]+)(=([^&]*))/g) || []).reduce(
+    (a, v) => ((a[v.slice(0, v.indexOf('='))] = v.slice(v.indexOf('=') + 1)), a),
+    {}
+  );
+```
+
+```js
+getURLParameters('http://url.com/page?name=Adam&surname=Smith'); // {name: 'Adam', surname: 'Smith'}
+getURLParameters('google.com'); // {}
+```
+
+### hexToRGB
+
+将颜色的 `HEX` 表示转换成 `rgb()` 或 `rgba()`（如果有 `alpha` 参数）
+
+```js
+const hexToRGB = hex => {
+  let alpha = false,
+    h = hex.slice(hex.startsWith('#') ? 1 : 0);
+  if (h.length === 3) h = [...h].map(x => x + x).join(''); // 3 位表达转成 6 位表达
+  else if (h.length === 8) alpha = true; // 有 alpha 值
+  h = parseInt(h, 16);
+  return (
+    'rgb' +
+    (alpha ? 'a' : '') +
+    '(' +
+    (h >>> (alpha ? 24 : 16)) +
+    ', ' +
+    ((h & (alpha ? 0x00ff0000 : 0x00ff00)) >>> (alpha ? 16 : 8)) +
+    ', ' +
+    ((h & (alpha ? 0x0000ff00 : 0x0000ff)) >>> (alpha ? 8 : 0)) +
+    (alpha ? `, ${h & 0x000000ff}` : '') +
+    ')'
+  );
+};
+```
+
+```js
+hexToRGB('#27ae60ff'); // 'rgba(39, 174, 96, 255)'
+hexToRGB('27ae60'); // 'rgb(39, 174, 96)'
+hexToRGB('#fff'); // 'rgb(255, 255, 255)'
+```
+
+### httpGet
+
+对于指定的 `URL` 创建一个 `GET` 请求
+
+使用 [`XMLHttpRequest`](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest) 
+
+调用 `callback` 函数响应 `onload` 事件，传入参数 `request.responseText`
+
+调用 `err` 函数响应 `onerror` 事件，传入参数 `request`
+
+```js
+const httpGet = (url, callback, err = console.error) => {
+  const request = new XMLHttpRequest();
+  request.open('GET', url, true);
+  request.onload = () => callback(request.responseText);
+  request.onerror = () => err(request);
+  request.send();
+};
+```
+
+```js
+httpGet(
+  'https://jsonplaceholder.typicode.com/posts/1',
+  console.log
+); /*
+Logs: {
+  "userId": 1,
+  "id": 1,
+  "title": "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
+  "body": "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto"
+}
+*/
+```
+
+### httpPost
+
+对于指定的 `URL` 创建一个 `POST` 请求
+
+```js
+const httpPost = (url, data, callback, err = console.error) => {
+  const request = new XMLHttpRequest();
+  request.open('POST', url, true);
+  request.setRequestHeader('Content-type', 'application/json; charset=utf-8'); // 设置请求头
+  request.onload = () => callback(request.responseText);
+  request.onerror = () => err(request);
+  request.send(data);
+};
+```
+
+```js
+const newPost = {
+  userId: 1,
+  id: 1337,
+  title: 'Foo',
+  body: 'bar bar bar'
+};
+const data = JSON.stringify(newPost);
+httpPost(
+  'https://jsonplaceholder.typicode.com/posts',
+  data,
+  console.log
+); /*
+Logs: {
+  "userId": 1,
+  "id": 1337,
+  "title": "Foo",
+  "body": "bar bar bar"
+}
+*/
+httpPost(
+  'https://jsonplaceholder.typicode.com/posts',
+  null, // does not send a body
+  console.log
+); /*
+Logs: {
+  "id": 101
+}
+*/
 ```
 
 </details>
