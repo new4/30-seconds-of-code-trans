@@ -6,7 +6,7 @@
   "scripts": {
     "next": "node ./build/get.js",
     "extract": "node ./build/extract.js",
-    "readme": "node ./index.js",
+    "readme": "node ./build/readme.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

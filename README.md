@@ -4,6 +4,10 @@
 
 ## 🔌 adapter
 
+<details>
+
+<summary>展开</summary>
+
 ### ary
 
 创建一个至多只接受 `n` 个参数的函数，它会弃掉多余的参数
@@ -55,7 +59,12 @@ let p3 = new Promise(resolve => setTimeout(resolve, 2000, 3));
 Pall(p1, p2, p3).then(console.log); // [1, 2, 3] (after about 2 seconds)
 ```
 
+</details>
 ## 📚 array
+
+<details>
+
+<summary>展开</summary>
 
 ### all
 
@@ -183,7 +192,47 @@ const compact = arr => arr.filter(Boolean);
 compact([0, 1, false, 2, '', 3, 'a', 'e' * 23, NaN, 's', 34]); // [ 1, 2, 3, 'a', 's', 34 ]
 ```
 
+### countBy
+
+使用指定的函数对数组元素进行分组，返回每组数据的数目
+
+使用 `Array.prototype.map()` 将数组的元素映射为函数参数或者应用元素属性
+
+使用 `Array.prototype.reduce()` 创建一个对象，它的键值由映射结果创建
+
+```js
+const countBy = (arr, fn) =>
+  arr.map(typeof fn === 'function' ? fn : val => val[fn]).reduce((acc, val) => {
+    acc[val] = (acc[val] || 0) + 1;
+    return acc;
+  }, {});
+```
+
+```js
+countBy([6.1, 4.2, 6.3], Math.floor); // {4: 1, 6: 2}
+countBy(['one', 'two', 'three'], 'length'); // {3: 2, 5: 1}
+```
+
+### countOccurrences
+
+统计一个值在数组中出现的次数
+
+使用 `Array.prototype.reduce()` 来递增计数次数
+
+```js
+const countOccurrences = (arr, val) => arr.reduce((a, v) => (v === val ? a + 1 : a), 0);
+```
+
+```js
+countOccurrences([1, 1, 2, 1, 2, 3], 1); // 3
+```
+
+</details>
 ## 🌐 browser
+
+<details>
+
+<summary>展开</summary>
 
 ### arrayToHtmlList
 
@@ -219,7 +268,88 @@ const bottomVisible = () =>
 bottomVisible(); // true
 ```
 
+### copyToClipboard
+
+⚠️ **注意:** 相同功能可以通过使用新的异步 [Clipboard API](https://github.com/w3c/clipboard-apis/blob/master/explainer.adoc#writing-to-the-clipboard) 使用，虽然它目前还处于实验阶段。
+
+复制一个字符串到剪切板
+
+只在用户操作下会生效（如，`click` 事件处理）
+
+新建一个 `<textarea>` 元素, 用提供的数据填充它并将其加到 HTML 文档中
+
+使用 `Selection.getRangeAt()` 储存选中区域（如果有的话）
+
+Use `document.execCommand('copy')` to copy to the clipboard.
+
+使用 `document.execCommand('copy')` 复制到剪切板去
+
+从 HTML 文档中移除 `<textarea>` 元素
+
+最后使用 `Selection().addRange()` 重新覆盖选中区域（如果有的话）
+
+```js
+const copyToClipboard = str => {
+  const el = document.createElement('textarea');
+  el.value = str;
+  el.setAttribute('readonly', '');
+  el.style.position = 'absolute';
+  el.style.left = '-9999px';
+  document.body.appendChild(el);
+  const selected =
+    document.getSelection().rangeCount > 0 ? document.getSelection().getRangeAt(0) : false;
+  el.select();
+  document.execCommand('copy');
+  document.body.removeChild(el);
+  if (selected) {
+    document.getSelection().removeAllRanges();
+    document.getSelection().addRange(selected);
+  }
+};
+```
+
+```js
+copyToClipboard('Lorem ipsum'); // 'Lorem ipsum' copied to clipboard.
+```
+
+### counter
+
+创建一个在 `selector` 对应元素内部进行计数的计数器。计数范围为 `[start, end]`, 步距为 `step`, 计数时间 `duration`。
+
+支持反向计数（累减）
+
+使用 `setInterval()`, `Math.abs()` 和 `Math.floor()` 计算更新间隔
+
+使用 `document.querySelector().innerHTML` 更新元素内部数值
+
+步距 `step` 默认为 `1`.
+
+计数时间 `duration` 默认为 `2000ms`
+
+```js
+const counter = (selector, start, end, step = 1, duration = 2000) => {
+  let current = start,
+    _step = (end - start) * step < 0 ? -step : step,
+    timer = setInterval(() => {
+      current += _step;
+      document.querySelector(selector).innerHTML = current;
+      if (current >= end) document.querySelector(selector).innerHTML = end;
+      if (current >= end) clearInterval(timer);
+    }, Math.abs(Math.floor(duration / (end - start))));
+  return timer;
+};
+```
+
+```js
+counter('#my-id', 1, 1000, 5, 2000); // Creates a 2-second timer for the element with id="my-id"
+```
+
+</details>
 ## 🎛️ function
+
+<details>
+
+<summary>展开</summary>
 
 ### attempt
 
@@ -319,7 +449,73 @@ chainAsync([
 ]);
 ```
 
+### compose
+
+从右到左组合函数功能
+
+使用 `Array.prototype.reduce()`
+
+最后（右）的函数可以接受一或多个参数；剩下的函数则是一元的
+
+```js
+const compose = (...fns) => fns.reduce((f, g) => (...args) => f(g(...args)));
+```
+
+```js
+const add5 = x => x + 5;
+const multiply = (x, y) => x * y;
+const multiplyAndAdd5 = compose(
+  add5,
+  multiply
+);
+multiplyAndAdd5(5, 2); // 15
+```
+
+### composeRight
+
+从左到右组合函数功能
+
+使用 `Array.prototype.reduce()`
+
+最先（左）的函数可以接受一或多个参数；剩下的函数则是一元的
+
+```js
+const composeRight = (...fns) => fns.reduce((f, g) => (...args) => g(f(...args)));
+```
+
+```js
+const add = (x, y) => x + y;
+const square = x => x * x;
+const addAndSquare = composeRight(add, square);
+addAndSquare(1, 2); // 9
+```
+
+### converge
+
+接受一个聚合函数和一个分支函数列表，并返回一个传入参数给每个分支函数的函数，该函数将分支函数的运行结果作为参数传递给聚合函数。
+
+使用 `Array.prototype.map()` 和 `Function.prototype.apply()` 给每个分支函数传入参数
+
+使用扩展运算符 (`...`) 来传入分支函数的执行结果给 `coverger`
+
+```js
+const converge = (converger, fns) => (...args) => converger(...fns.map(fn => fn.apply(null, args)));
+```
+
+```js
+const average = converge((a, b) => a / b, [
+  arr => arr.reduce((a, v) => a + v, 0),
+  arr => arr.length
+]);
+average([1, 2, 3, 4, 5, 6, 7]); // 4
+```
+
+</details>
 ## ➗ math
+
+<details>
+
+<summary>展开</summary>
 
 ### approximatelyEqual
 
@@ -415,7 +611,12 @@ clampNumber(2, 3, 5); // 3
 clampNumber(1, -1, -5); // -1
 ```
 
+</details>
 ## 📦 node
+
+<details>
+
+<summary>展开</summary>
 
 ### atob
 
@@ -478,7 +679,12 @@ console.log(colorize('foo', 'bar').bgBlue); // 'foo bar' (blue background)
 console.log(colorize(colorize('foo').yellow, colorize('foo').green).bgWhite); // 'foo bar' (first word in yellow letters, second word in green letters, white background for both)
 ```
 
+</details>
 ## 🗃️ object
+
+<details>
+
+<summary>展开</summary>
 
 ### bindAll
 
@@ -509,7 +715,12 @@ bindAll(view, 'click');
 jQuery(element).on('click', view.click); // Logs 'clicked docs' when clicked.
 ```
 
+</details>
 ## 📜 string
+
+<details>
+
+<summary>展开</summary>
 
 ### byteSize
 
@@ -571,7 +782,12 @@ compactWhitespace('Lorem    Ipsum'); // 'Lorem Ipsum'
 compactWhitespace('Lorem \n Ipsum'); // 'Lorem Ipsum'
 ```
 
+</details>
 ## 🔧 utility
+
+<details>
+
+<summary>展开</summary>
 
 ### castArray
 
@@ -629,3 +845,5 @@ const coalesceFactory = valid => (...args) => args.find(valid);
 const customCoalesce = coalesceFactory(_ => ![null, undefined, '', NaN].includes(_));
 customCoalesce(undefined, null, NaN, '', 'Waldo'); // "Waldo"
 ```
+
+</details>
