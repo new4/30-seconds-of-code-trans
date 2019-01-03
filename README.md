@@ -351,6 +351,96 @@ const dropWhile = (arr, func) => {
 dropWhile([1, 2, 3, 4], n => n >= 3); // [3,4]
 ```
 
+### everyNth
+
+返回步距 `nth` 的采样数据
+
+使用 `Array.prototype.filter()` 检测 `index`
+
+```js
+const everyNth = (arr, nth) => arr.filter((e, i) => i % nth === nth - 1);
+```
+
+```js
+everyNth([1, 2, 3, 4, 5, 6], 2); // [ 2, 4, 6 ]
+```
+
+### filterFalsy
+
+过滤掉数组中的非真值
+
+```js
+const filterFalsy = arr => arr.filter(Boolean);
+```
+
+```js
+filterFalsy(['', true, {}, false, 'sample', 1, 0]); // [true, {}, 'sample', 1]
+```
+
+### filterNonUnique
+
+过滤掉数组中存在多个值的元素
+
+比较 `arr.indexOf(i) === arr.lastIndexOf(i)` 来查看数组中是否有多个值 `i`
+
+```js
+const filterNonUnique = arr => arr.filter(i => arr.indexOf(i) === arr.lastIndexOf(i));
+```
+
+```js
+filterNonUnique([1, 2, 2, 3, 4, 4, 5]); // [1, 3, 5]
+```
+
+### filterNonUniqueBy
+
+过滤掉基于某个比较函数的返回值是否重复的数组元素
+
+```js
+const filterNonUniqueBy = (arr, fn) =>
+  arr.filter((v, i) => arr.every((x, j) => (i === j) === fn(v, x, i, j)));
+```
+
+```js
+filterNonUniqueBy(
+  [
+    { id: 0, value: 'a' },
+    { id: 1, value: 'b' },
+    { id: 2, value: 'c' },
+    { id: 1, value: 'd' },
+    { id: 0, value: 'e' }
+  ],
+  (a, b) => a.id == b.id
+); // [ { id: 2, value: 'c' } ]
+```
+
+### findLast
+
+返回使得函数返回真值的最后一个元素
+
+```js
+const findLast = (arr, fn) => arr.filter(fn).pop();
+```
+
+```js
+findLast([1, 2, 3, 4], n => n % 2 === 1); // 3
+```
+
+### findLastIndex
+
+返回使得函数返回真值的最后一个元素的下表
+
+```js
+const findLastIndex = (arr, fn) =>
+  arr
+    .map((val, i) => [i, val]) // 重新组织一下参数传进去
+    .filter(([i, val]) => fn(val, i, arr))
+    .pop()[0];
+```
+
+```js
+findLastIndex([1, 2, 3, 4], n => n % 2 === 1); // 2 (index of the value 3)
+```
+
 </details>
 
 ## 🌐 browser
@@ -1074,6 +1164,45 @@ own individual rating by supplying it as the third argument.
 */
 ```
 
+### factorial
+
+计算阶乘
+
+```js
+const factorial = n =>
+  n < 0
+    ? (() => {
+      throw new TypeError('Negative numbers are not allowed!');
+    })()
+    : n <= 1
+      ? 1
+      : n * factorial(n - 1);
+```
+
+```js
+factorial(6); // 720
+```
+
+### fibonacci
+
+生成斐波那契数组
+
+使用 `Array.from()` 和 `Array.prototype.reduce()`
+
+使用数组下标初始化最开始的两个值 `0` 和 `1`
+
+```js
+const fibonacci = n =>
+  Array.from({ length: n }).reduce(
+    (acc, val, i) => acc.concat(i > 1 ? acc[i - 1] + acc[i - 2] : i),
+    []
+  );
+```
+
+```js
+fibonacci(6); // [0, 1, 1, 2, 3, 5]
+```
+
 </details>
 
 ## 📦 node
@@ -1356,6 +1485,27 @@ const equals = (a, b) => {
 equals({ a: [2, { e: 3 }], b: [4], c: 'foo' }, { a: [2, { e: 3 }], b: [4], c: 'foo' }); // true
 ```
 
+### findKey
+
+返回第一个满足测试函数的值的键名，没有找到的话就返回 `undefined`
+
+使用 `Object.keys(obj)` 和 `Array.prototype.find()` 
+
+```js
+const findKey = (obj, fn) => Object.keys(obj).find(key => fn(obj[key], key, obj));
+```
+
+```js
+findKey(
+  {
+    barney: { age: 36, active: true },
+    fred: { age: 40, active: false },
+    pebbles: { age: 1, active: true }
+  },
+  o => o['active']
+); // 'barney'
+```
+
 </details>
 
 ## 📜 string
@@ -1584,6 +1734,25 @@ const coalesceFactory = valid => (...args) => args.find(valid);
 ```js
 const customCoalesce = coalesceFactory(_ => ![null, undefined, '', NaN].includes(_));
 customCoalesce(undefined, null, NaN, '', 'Waldo'); // "Waldo"
+```
+
+### extendHex
+
+将 3 位的颜色字串转化成 6 位的
+
+```js
+const extendHex = shortHex =>
+  '#' +
+  shortHex
+    .slice(shortHex.startsWith('#') ? 1 : 0)
+    .split('')
+    .map(x => x + x)
+    .join('');
+```
+
+```js
+extendHex('#03f'); // '#0033ff'
+extendHex('05a'); // '#0055aa'
 ```
 
 </details>
