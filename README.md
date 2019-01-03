@@ -804,6 +804,31 @@ formatDuration(1001); // '1 second, 1 millisecond'
 formatDuration(34325055574); // '397 days, 6 hours, 44 minutes, 15 seconds, 574 milliseconds'
 ```
 
+### getColonTimeFromDate
+
+返回 `HH:MM:SS` 格式表示的 `Date` 对象
+
+```js
+const getColonTimeFromDate = date => date.toTimeString().slice(0, 8);
+```
+
+```js
+getColonTimeFromDate(new Date()); // "08:38:00"
+```
+
+### getDaysDiffBetweenDates
+
+返回两个 `Date` 对象相差的天数
+
+```js
+const getDaysDiffBetweenDates = (dateInitial, dateFinal) =>
+  (dateFinal - dateInitial) / (1000 * 3600 * 24);
+```
+
+```js
+getDaysDiffBetweenDates(new Date('2017-12-13'), new Date('2017-12-22')); // 9
+```
+
 </details>
 
 ## 🎛️ function
@@ -1057,6 +1082,22 @@ delay(
 ); // Logs 'later' after one second.
 ```
 
+### functionName
+
+打印出函数的名字
+
+使用 `console.debug()` 和 `name` 属性
+
+`console.debug` 是 `console.log` 的别名
+
+```js
+const functionName = fn => (console.debug(fn.name), fn);
+```
+
+```js
+functionName(Math.max); // max (logged in debug channel of console)
+```
+
 </details>
 
 ## ➗ math
@@ -1279,6 +1320,42 @@ const fibonacci = n =>
 
 ```js
 fibonacci(6); // [0, 1, 1, 2, 3, 5]
+```
+
+### gcd
+
+计算几个数的最大公约数（可以传入数字和数组）
+
+内部的 `_gcd` 函数用于迭代
+
+```js
+const gcd = (...arr) => {
+  // y=0 就返回 x; 否则返回 x/y 的余数
+  const _gcd = (x, y) => (!y ? x : gcd(y, x % y));
+  return [...arr].reduce((a, b) => _gcd(a, b));
+};
+```
+
+```js
+gcd(8, 36); // 4
+gcd(...[12, 8, 32]); // 4
+```
+
+### geometricProgression
+
+等比级数
+
+```js
+const geometricProgression = (end, start = 1, step = 2) =>
+  Array.from({ length: Math.floor(Math.log(end / start) / Math.log(step)) + 1 }).map(
+    (v, i) => start * step ** i
+  );
+```
+
+```js
+geometricProgression(256); // [1, 2, 4, 8, 16, 32, 64, 128, 256]
+geometricProgression(256, 3); // [3, 6, 12, 24, 48, 96, 192]
+geometricProgression(256, 1, 4); // [1, 4, 16, 64, 256]
 ```
 
 </details>
@@ -1626,6 +1703,81 @@ const flattenObject = (obj, prefix = '') =>
 flattenObject({ a: { b: { c: 1 } }, d: 1 }); // { 'a.b.c': 1, d: 1 }
 ```
 
+### forOwn
+
+遍历对象的自身属性（own properties）并执行函数
+
+`Object.keys` 返回一个数组，包括对象自身的（不含继承的）所有可枚举属性（不含 `Symbol` 属性）的键名
+
+```js
+const forOwn = (obj, fn) => Object.keys(obj).forEach(key => fn(obj[key], key, obj));
+```
+
+```js
+forOwn({ foo: 'bar', a: 1 }, v => console.log(v)); // 'bar', 1
+```
+
+### forOwnRight
+
+反向遍历对象的自身属性（own properties）并执行函数
+
+```js
+const forOwnRight = (obj, fn) =>
+  Object.keys(obj)
+    .reverse()
+    .forEach(key => fn(obj[key], key, obj));
+```
+
+```js
+forOwnRight({ foo: 'bar', a: 1 }, v => console.log(v)); // 1, 'bar'
+```
+
+### functions
+
+返回对象自身的（可以选择包含继承的）可枚举属性中是函数的那些属性名
+
+自身属性用 `Object.keys(obj)`
+
+继承的对象用 `Object.getPrototypeOf(obj)`，然后再对其使用 `Object.keys(obj)`
+
+```js
+const functions = (obj, inherited = false) =>
+  (inherited
+    ? [...Object.keys(obj), ...Object.keys(Object.getPrototypeOf(obj))]
+    : Object.keys(obj)
+  ).filter(key => typeof obj[key] === 'function');
+```
+
+```js
+function Foo() {
+  this.a = () => 1;
+  this.b = () => 2;
+}
+Foo.prototype.c = () => 3;
+functions(new Foo()); // ['a', 'b']
+functions(new Foo(), true); // ['a', 'b', 'c']
+```
+
+### get
+
+通过检索字符串来获得对象的值
+
+```js
+const get = (from, ...selectors) =>
+  [...selectors].map(s =>
+    s
+      .replace(/\[([^\[\]]*)\]/g, '.$1.') // 替换中括号为 .
+      .split('.')
+      .filter(t => t !== '')
+      .reduce((prev, cur) => prev && prev[cur], from)
+  );
+```
+
+```js
+const obj = { selector: { to: { val: 'val to select' } }, target: [1, 2, { a: 'test' }] };
+get(obj, 'selector.to.val', 'target[0]', 'target[2].a'); // ['val to select', 1, 'test']
+```
+
 </details>
 
 ## 📜 string
@@ -1789,6 +1941,24 @@ const escapeRegExp = str => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 ```js
 escapeRegExp('(test)'); // \\(test\\)
+```
+
+### fromCamelCase
+
+将驼峰形式的字符串转换成正常形式，可以指定原先驼峰分隔处的分隔符（默认为 `_`）
+
+```js
+const fromCamelCase = (str, separator = '_') =>
+  str
+    .replace(/([a-z\d])([A-Z])/g, '$1' + separator + '$2')
+    .replace(/([A-Z]+)([A-Z][a-z\d]+)/g, '$1' + separator + '$2')
+    .toLowerCase();
+```
+
+```js
+fromCamelCase('someDatabaseFieldName', ' '); // 'some database field name'
+fromCamelCase('someLabelThatNeedsToBeCamelized', '-'); // 'some-label-that-needs-to-be-camelized'
+fromCamelCase('someJavascriptProperty', '_'); // 'some_javascript_property'
 ```
 
 </details>
