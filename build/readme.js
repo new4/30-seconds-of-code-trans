@@ -55,7 +55,7 @@ const createReadme = () => {
 
       markdown.push(
         ...contents,
-        '</details>',
+        '</details>\n',
       );
     }
   });

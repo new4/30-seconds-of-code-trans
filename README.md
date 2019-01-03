@@ -60,6 +60,7 @@ Pall(p1, p2, p3).then(console.log); // [1, 2, 3] (after about 2 seconds)
 ```
 
 </details>
+
 ## 📚 array
 
 <details>
@@ -227,7 +228,24 @@ const countOccurrences = (arr, val) => arr.reduce((a, v) => (v === val ? a + 1 :
 countOccurrences([1, 1, 2, 1, 2, 3], 1); // 3
 ```
 
+### deepFlatten
+
+深度展平一个数组
+
+使用迭代
+
+使用扩展操作符(`...`) 来展平一个数组
+
+```js
+const deepFlatten = arr => [].concat(...arr.map(v => (Array.isArray(v) ? deepFlatten(v) : v)));
+```
+
+```js
+deepFlatten([1, [2], [[3], 4], 5]); // [1,2,3,4,5]
+```
+
 </details>
+
 ## 🌐 browser
 
 <details>
@@ -344,7 +362,116 @@ const counter = (selector, start, end, step = 1, duration = 2000) => {
 counter('#my-id', 1, 1000, 5, 2000); // Creates a 2-second timer for the element with id="my-id"
 ```
 
+### createElement
+
+从一个字串创建一个元素对象（不将其插入文档中）
+
+若给定的字串包含有多个元素，只返回第一个
+
+使用 `document.createElement()` 创建一个新的元素
+
+将它的 `innerHTML` 设置成提供的参数字符串
+
+返回 `ParentNode.firstElementChild` 
+
+```js
+const createElement = str => {
+  const el = document.createElement('div');
+  el.innerHTML = str;
+  return el.firstElementChild;
+};
+```
+
+```js
+const el = createElement(
+  `<div class="container">
+    <p>Hello!</p>
+  </div>`
+);
+console.log(el.className); // 'container'
+```
+
+### createEventHub
+
+创建一个包含有 `emit`, `on`, `off` 方法的事件发布/订阅 ([发布–订阅](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern)) 对象。
+
+使用 `Object.create(null)` 创建一个不从 `Object.prototype` 继承属性和方法的空对象 `hub`
+
+```js
+const createEventHub = () => ({
+  hub: Object.create(null),
+  emit(event, data) {
+    (this.hub[event] || []).forEach(handler => handler(data));
+  },
+  on(event, handler) {
+    if (!this.hub[event]) this.hub[event] = [];
+    this.hub[event].push(handler);
+  },
+  off(event, handler) {
+    const i = (this.hub[event] || []).findIndex(h => h === handler);
+    if (i > -1) this.hub[event].splice(i, 1);
+  }
+});
+```
+
+```js
+const handler = data => console.log(data);
+const hub = createEventHub();
+let increment = 0;
+
+// Subscribe: listen for different types of events
+hub.on('message', handler);
+hub.on('message', () => console.log('Message event fired'));
+hub.on('increment', () => increment++);
+
+// Publish: emit events to invoke all handlers subscribed to them, passing the data to them as an argument
+hub.emit('message', 'hello world'); // logs 'hello world' and 'Message event fired'
+hub.emit('message', { hello: 'world' }); // logs the object and 'Message event fired'
+hub.emit('increment'); // `increment` variable is now 1
+
+// Unsubscribe: stop a specific handler from listening to the 'message' event
+hub.off('message', handler);
+```
+
+### currentURL
+
+返回当前的 URL
+
+使用 `window.location.href`
+
+```js
+const currentURL = () => window.location.href;
+```
+
+```js
+currentURL(); // 'https://google.com'
+```
+
 </details>
+
+## ⏱️ date
+
+<details>
+
+<summary>展开</summary>
+
+### dayOfYear
+
+获取某一个 `Date` 对象是该年的第几天
+
+使用 `new Date()` 和 `Date.prototype.getFullYear()` 获取 `Date` 对象对应年份的第一天，然后提取对应天数的秒数，再使用 `Math.floor()` 来算出天数
+
+```js
+const dayOfYear = date =>
+  Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 1000 / 60 / 60 / 24);
+```
+
+```js
+dayOfYear(new Date()); // 272
+```
+
+</details>
+
 ## 🎛️ function
 
 <details>
@@ -510,7 +637,56 @@ const average = converge((a, b) => a / b, [
 average([1, 2, 3, 4, 5, 6, 7]); // 4
 ```
 
+### curry
+
+柯里化函数
+
+使用递归
+
+若传入了足够的参数 `args`，调用传入的函数 `fn`; 否则返回需要剩余参数的柯里化的函数
+
+若想要柯里化一个可以传入茫茫多参数的函数（如，`Math.min()`），可以选择传入参数个数给 `arity`
+
+`fn.length` 指函数参数个数
+
+```js
+const curry = (fn, arity = fn.length, ...args) =>
+  arity <= args.length ? fn(...args) : curry.bind(null, fn, arity, ...args);
+```
+
+```js
+curry(Math.pow)(2)(10); // 1024
+curry(Math.min, 3)(10)(50)(2); // 2
+```
+
+### debounce
+
+防抖函数
+
+延迟调用函数 `fn` 直到上一次调用它过去了 `ms` 时间
+
+```js
+const debounce = (fn, ms = 0) => {
+  let timeoutId;
+  return function(...args) {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn.apply(this, args), ms);
+  };
+};
+```
+
+```js
+window.addEventListener(
+  'resize',
+  debounce(() => {
+    console.log(window.innerWidth);
+    console.log(window.innerHeight);
+  }, 250)
+); // Will log the window dimensions at most every 250ms
+```
+
 </details>
+
 ## ➗ math
 
 <details>
@@ -612,6 +788,7 @@ clampNumber(1, -1, -5); // -1
 ```
 
 </details>
+
 ## 📦 node
 
 <details>
@@ -680,6 +857,7 @@ console.log(colorize(colorize('foo').yellow, colorize('foo').green).bgWhite); //
 ```
 
 </details>
+
 ## 🗃️ object
 
 <details>
@@ -715,7 +893,56 @@ bindAll(view, 'click');
 jQuery(element).on('click', view.click); // Logs 'clicked docs' when clicked.
 ```
 
+### deepClone
+
+深度克隆一个对象
+
+使用迭代
+
+使用 `Object.assign()` 和一个空对象(`{}`) 创建一个浅复制
+
+使用 `Object.keys()` 和 `Array.prototype.forEach()` 检查哪些键值对需要进行深度克隆
+
+```js
+const deepClone = obj => {
+  let clone = Object.assign({}, obj);
+  Object.keys(clone).forEach(
+    key => (clone[key] = typeof obj[key] === 'object' ? deepClone(obj[key]) : obj[key])
+  );
+  return Array.isArray(obj) ? (clone.length = obj.length) && Array.from(clone) : clone;
+};
+```
+
+```js
+const a = { foo: 'bar', obj: { a: 1, b: 2 } };
+const b = deepClone(a); // a !== b, a.obj !== b.obj
+```
+
+### deepFreeze
+
+深度冻结一个对象
+
+在所有非冻结的属性上迭代调用 `Object.freeze(obj)`
+
+```js
+const deepFreeze = obj =>
+  Object.keys(obj).forEach(
+    prop =>
+      !(obj[prop] instanceof Object) || Object.isFrozen(obj[prop]) ? null : deepFreeze(obj[prop])
+  ) || Object.freeze(obj);
+```
+
+```js
+'use strict';
+
+const o = deepFreeze([1, [2, 3]]);
+
+o[0] = 3; // not allowed
+o[1][0] = 4; // not allowed as well
+```
+
 </details>
+
 ## 📜 string
 
 <details>
@@ -782,7 +1009,66 @@ compactWhitespace('Lorem    Ipsum'); // 'Lorem Ipsum'
 compactWhitespace('Lorem \n Ipsum'); // 'Lorem Ipsum'
 ```
 
+### CSVToArray
+
+将一个用逗号分隔的字符串转换成二维数组。
+
+```js
+const CSVToArray = (data, delimiter = ',', omitFirstRow = false) =>
+  data
+    .slice(omitFirstRow ? data.indexOf('\n') + 1 : 0)
+    .split('\n')
+    .map(v => v.split(delimiter));
+```
+
+```js
+CSVToArray('a,b\nc,d'); // [['a','b'],['c','d']];
+CSVToArray('a;b\nc;d', ';'); // [['a','b'],['c','d']];
+CSVToArray('col1,col2\na,b\nc,d', ',', true); // [['a','b'],['c','d']];
+```
+
+### CSVToJSON
+
+将一个用逗号分隔的字符串转换成二维**对象**数组。
+
+第一行作为对象键名
+
+使用 `Array.prototype.reduce()` 创建每一行的值
+
+```js
+const CSVToJSON = (data, delimiter = ',') => {
+  const titles = data.slice(0, data.indexOf('\n')).split(delimiter);
+  return data
+    .slice(data.indexOf('\n') + 1)
+    .split('\n')
+    .map(v => {
+      const values = v.split(delimiter);
+      return titles.reduce((obj, title, index) => ((obj[title] = values[index]), obj), {});
+    });
+};
+```
+
+```js
+CSVToJSON('col1,col2\na,b\nc,d'); // [{'col1': 'a', 'col2': 'b'}, {'col1': 'c', 'col2': 'd'}];
+CSVToJSON('col1;col2\na;b\nc;d', ';'); // [{'col1': 'a', 'col2': 'b'}, {'col1': 'c', 'col2': 'd'}];
+```
+
+### decapitalize
+
+首字母改成小写
+
+```js
+const decapitalize = ([first, ...rest], upperRest = false) =>
+  first.toLowerCase() + (upperRest ? rest.join('').toUpperCase() : rest.join(''));
+```
+
+```js
+decapitalize('FooBar'); // 'fooBar'
+decapitalize('FooBar', true); // 'fOOBAR'
+```
+
 </details>
+
 ## 🔧 utility
 
 <details>
