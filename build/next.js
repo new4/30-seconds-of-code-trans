@@ -1,4 +1,6 @@
 const fse = require('fs-extra');
+const execa = require('execa');
+
 const {
   xor,
 } = require('lodash');
@@ -42,3 +44,8 @@ fse.copySync(
 
 logBefore(cyan(`Total:${srcFiles.length}`));
 logAfter(yellow(` Left:${unReadList.length}`));
+
+(async () => {
+  const { stdout } = await execa('code', [underPath(SNIPPETS_TRANS, next)]);
+  console.log(stdout);
+})();
