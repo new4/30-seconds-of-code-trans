@@ -244,6 +244,55 @@ const deepFlatten = arr => [].concat(...arr.map(v => (Array.isArray(v) ? deepFla
 deepFlatten([1, [2], [[3], 4], 5]); // [1,2,3,4,5]
 ```
 
+### difference
+
+返回数组 `a` 中有而 `b` 中没有的值
+
+用 `b` 建立一个 `Set`，然后使用过滤函数 `Array.prototype.filter()` 过滤数组 `a`
+
+```js
+const difference = (a, b) => {
+  const s = new Set(b);
+  return a.filter(x => !s.has(x));
+};
+```
+
+```js
+difference([1, 2, 3], [1, 2, 4]); // [3]
+```
+
+### differenceBy
+
+返回数组 `a` 中元素的 `fn` 函数调用结果和 `b` 中元素的 `fn` 函数调用结果不一致的元素
+
+`Set` 使用 `fn` 运行结果进行初始化
+
+```js
+const differenceBy = (a, b, fn) => {
+  const s = new Set(b.map(fn));
+  return a.filter(x => !s.has(fn(x)));
+};
+```
+
+```js
+differenceBy([2.1, 1.2], [2.3, 3.4], Math.floor); // [1.2]
+differenceBy([{ x: 2 }, { x: 1 }], [{ x: 1 }], v => v.x); // [ { x: 2 } ]
+```
+
+### differenceWith
+
+过滤出数组中对于比较函数不返回 `true` 的值
+
+使用 `Array.prototype.filter()` 和 `Array.prototype.findIndex()`
+
+```js
+const differenceWith = (arr, val, comp) => arr.filter(a => val.findIndex(b => comp(a, b)) === -1);
+```
+
+```js
+differenceWith([1, 1.2, 1.5, 3, 0], [1.9, 3, 0], (a, b) => Math.round(a) === Math.round(b)); // [1, 1.2]
+```
+
 </details>
 
 ## 🌐 browser
@@ -445,6 +494,23 @@ const currentURL = () => window.location.href;
 
 ```js
 currentURL(); // 'https://google.com'
+```
+
+### detectDeviceType
+
+检测网站是在移动设备/桌面设备上打开的
+
+使用正则检测 `navigator.userAgent` 属性
+
+```js
+const detectDeviceType = () =>
+  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    ? 'Mobile'
+    : 'Desktop';
+```
+
+```js
+detectDeviceType(); // "Mobile" or "Desktop"
 ```
 
 </details>
@@ -685,6 +751,44 @@ window.addEventListener(
 ); // Will log the window dimensions at most every 250ms
 ```
 
+### defer
+
+延迟调用函数直至当前的调用栈清空了
+
+```js
+const defer = (fn, ...args) => setTimeout(fn, 1, ...args);
+```
+
+```js
+// Example A:
+defer(console.log, 'a'), console.log('b'); // logs 'b' then 'a'
+
+// Example B:
+document.querySelector('#someElement').innerHTML = 'Hello';
+longRunningFunction(); // Browser will not update the HTML until this has finished
+defer(longRunningFunction); // Browser will update the HTML then run the function
+```
+
+### delay
+
+在等待了 `wait` 毫秒之后调用函数
+
+`setTimeout()` 第三个参数传入供 `fn` 调用的函数
+
+```js
+const delay = (fn, wait, ...args) => setTimeout(fn, wait, ...args);
+```
+
+```js
+delay(
+  function(text) {
+    console.log(text);
+  },
+  1000,
+  'later'
+); // Logs 'later' after one second.
+```
+
 </details>
 
 ## ➗ math
@@ -785,6 +889,20 @@ const clampNumber = (num, a, b) => Math.max(Math.min(num, Math.max(a, b)), Math.
 ```js
 clampNumber(2, 3, 5); // 3
 clampNumber(1, -1, -5); // -1
+```
+
+### degreesToRads
+
+将角度转成弧度
+
+使用 `Math.PI`
+
+```js
+const degreesToRads = deg => (deg * Math.PI) / 180.0;
+```
+
+```js
+degreesToRads(90.0); // ~1.5708
 ```
 
 </details>
@@ -939,6 +1057,108 @@ const o = deepFreeze([1, [2, 3]]);
 
 o[0] = 3; // not allowed
 o[1][0] = 4; // not allowed as well
+```
+
+### deepMapKeys
+
+深度处理对象的键名
+
+使用 `Object.keys(obj)` 遍历处理对象的键
+
+使用 `Array.prototype.reduce()` 创建新的对象，其键为经过 `fn` 处理后的键，值为原来的键值
+
+```js
+const deepMapKeys = (obj, f) =>
+  Array.isArray(obj)
+    ? obj.map(val => deepMapKeys(val, f))
+    : typeof obj === 'object'
+      ? Object.keys(obj).reduce((acc, current) => {
+        const val = obj[current];
+        acc[f(current)] =
+            val !== null && typeof val === 'object' ? deepMapKeys(val, f) : (acc[f(current)] = val);
+        return acc;
+      }, {})
+      : obj;
+```
+
+```js
+const obj = {
+  foo: '1',
+  nested: {
+    child: {
+      withArray: [
+        {
+          grandChild: ['hello']
+        }
+      ]
+    }
+  }
+};
+const upperKeysObj = deepMapKeys(obj, key => key.toUpperCase());
+/*
+{
+  "FOO":"1",
+  "NESTED":{
+    "CHILD":{
+      "WITHARRAY":[
+        {
+          "GRANDCHILD":[ 'hello' ]
+        }
+      ]
+    }
+  }
+}
+*/
+```
+
+### defaults
+
+给对象中所有的 `undefined` 属性赋默认值
+
+使用 `Object.assign()` 依据原来的 `obj`(保证键的顺序)创建一个新对象
+
+使用 `Array.prototype.reverse()` 和扩展运算符 `...` 进行组合，左边优先所以 `reverse` 到最后
+
+最后再用 `obj` 中的默认值进行覆盖
+
+```js
+const defaults = (obj, ...defs) => Object.assign({}, obj, ...defs.reverse(), obj);
+```
+
+```js
+defaults({ a: 1 }, { b: 2 }, { b: 6 }, { a: 3 }); // { a: 1, b: 2 }
+```
+
+### dig
+
+返回给定键在嵌套 `JSON` 对象中对应的值
+
+使用 `in` 查看 `obj` 中是否存在 `target`
+
+找到了就直接返回 `obj[target]`
+
+否则 `Object.values(obj)` 和 `Array.prototype.reduce()` 来递归地调用 `dig` 方法直到第一对符合要求的键值对被发现
+
+```js
+const dig = (obj, target) =>
+  target in obj
+    ? obj[target]
+    : Object.values(obj).reduce((acc, val) => {
+      if (acc !== undefined) return acc;
+      if (typeof val === 'object') return dig(val, target);
+    }, undefined);
+```
+
+```js
+const data = {
+  level1: {
+    level2: {
+      level3: 'some data'
+    }
+  }
+};
+dig(data, 'level3'); // 'some data'
+dig(data, 'level4'); // undefined
 ```
 
 </details>
