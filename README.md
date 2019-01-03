@@ -293,6 +293,64 @@ const differenceWith = (arr, val, comp) => arr.filter(a => val.findIndex(b => co
 differenceWith([1, 1.2, 1.5, 3, 0], [1.9, 3, 0], (a, b) => Math.round(a) === Math.round(b)); // [1, 1.2]
 ```
 
+### drop
+
+将数组移除左边 `n` 个元素并返回
+
+```js
+const drop = (arr, n = 1) => arr.slice(n);
+```
+
+```js
+drop([1, 2, 3]); // [2,3]
+drop([1, 2, 3], 2); // [3]
+drop([1, 2, 3], 42); // []
+```
+
+### dropRight
+
+将数组移除右边边 `n` 个元素并返回
+
+```js
+const dropRight = (arr, n = 1) => arr.slice(0, -n);
+```
+
+```js
+dropRight([1, 2, 3]); // [1,2]
+dropRight([1, 2, 3], 2); // [1]
+dropRight([1, 2, 3], 42); // []
+```
+
+### dropRightWhile
+
+从右边开始移除数组元素直到改元素使得函数 `func` 返回 `true`
+
+```js
+const dropRightWhile = (arr, func) => {
+  while (arr.length > 0 && !func(arr[arr.length - 1])) arr = arr.slice(0, -1);
+  return arr;
+};
+```
+
+```js
+dropRightWhile([1, 2, 3, 4], n => n < 3); // [1, 2]
+```
+
+### dropWhile
+
+从左边开始移除数组元素直到改元素使得函数 `func` 返回 `true`
+
+```js
+const dropWhile = (arr, func) => {
+  while (arr.length > 0 && !func(arr[0])) arr = arr.slice(1);
+  return arr;
+};
+```
+
+```js
+dropWhile([1, 2, 3, 4], n => n >= 3); // [3,4]
+```
+
 </details>
 
 ## 🌐 browser
@@ -511,6 +569,48 @@ const detectDeviceType = () =>
 
 ```js
 detectDeviceType(); // "Mobile" or "Desktop"
+```
+
+### elementContains
+
+若父元素包含子元素，返回 `true`；否则返回 `false`
+
+使用 [`Node.contains()`](https://developer.mozilla.org/zh-CN/docs/Web/API/Node/contains)
+
+`node.contains(otherNode)` - 如果 `otherNode` 是 `node` 的后代节点或是 `node` **节点本身** 则返回 `true`, 否则返回 `false`
+
+```js
+const elementContains = (parent, child) => parent !== child && parent.contains(child);
+```
+
+```js
+elementContains(document.querySelector('head'), document.querySelector('title')); // true
+elementContains(document.querySelector('body'), document.querySelector('body')); // false
+```
+
+### elementIsVisibleInViewport
+
+检测元素在视口中是否是可见的
+
+使用 [`Element.getBoundingClientRect()`](https://developer.mozilla.org/zh-CN/docs/Web/API/Element/getBoundingClientRect) 和 `window.innerWidth|window.innerHeight)` 的值来检测
+
+`partiallyVisible` 指定是否部分可见
+
+```js
+const elementIsVisibleInViewport = (el, partiallyVisible = false) => {
+  const { top, left, bottom, right } = el.getBoundingClientRect();
+  const { innerHeight, innerWidth } = window;
+  return partiallyVisible
+    ? ((top > 0 && top < innerHeight) || (bottom > 0 && bottom < innerHeight)) &&
+        ((left > 0 && left < innerWidth) || (right > 0 && right < innerWidth))
+    : top >= 0 && left >= 0 && bottom <= innerHeight && right <= innerWidth;
+};
+```
+
+```js
+// e.g. 100x100 viewport and a 10x10px element at position {top: -1, left: 0, bottom: 9, right: 10}
+elementIsVisibleInViewport(el); // false - (not fully visible)
+elementIsVisibleInViewport(el, true); // true - (partially visible)
 ```
 
 </details>
@@ -905,6 +1005,75 @@ const degreesToRads = deg => (deg * Math.PI) / 180.0;
 degreesToRads(90.0); // ~1.5708
 ```
 
+### digitize
+
+将一个数转化成单个数字组成的数组
+
+先转成字符串再用扩展字符串分成数组，随后将每一个字符转成数字
+
+```js
+const digitize = n => [...`${n}`].map(i => parseInt(i));
+```
+
+```js
+digitize(123); // [1, 2, 3]
+```
+
+### distance
+
+返回两点之间的距离
+
+使用 `Math.hypot()` (这个方法 IE 不兼容)
+
+```js
+const distance = (x0, y0, x1, y1) => Math.hypot(x1 - x0, y1 - y0);
+```
+
+```js
+distance(1, 1, 2, 3); // 2.23606797749979
+```
+
+### elo
+
+计算[ELO等级分制度](https://en.wikipedia.org/wiki/Elo_rating_system). 
+
+传入的数组按照 `胜者->负者` 的顺序
+
+默认 `kFactor` 为 32.
+
+```js
+const elo = ([...ratings], kFactor = 32, selfRating) => {
+  const [a, b] = ratings;
+  // opponent 对 self 的胜率期望值
+  const expectedScore = (self, opponent) => 1 / (1 + 10 ** ((opponent - self) / 400));
+  const newRating = (rating, i) =>
+    (selfRating || rating) + kFactor * (i - expectedScore(i ? a : b, i ? b : a));
+  if (ratings.length === 2) return [newRating(a, 1), newRating(b, 0)];
+
+  for (let i = 0, len = ratings.length; i < len; i++) {
+    let j = i;
+    while (j < len - 1) {
+      j++;
+      [ratings[i], ratings[j]] = elo([ratings[i], ratings[j]], kFactor);
+    }
+  }
+  return ratings;
+};
+```
+
+```js
+// Standard 1v1s
+elo([1200, 1200]); // [1216, 1184]
+elo([1200, 1200], 64); // [1232, 1168]
+// 4 player FFA, all same rank
+elo([1200, 1200, 1200, 1200]).map(Math.round); // [1246, 1215, 1185, 1154]
+/*
+For teams, each rating can adjusted based on own team's average rating vs.
+average rating of opposing team, with the score being added to their
+own individual rating by supplying it as the third argument.
+*/
+```
+
 </details>
 
 ## 📦 node
@@ -1161,6 +1330,32 @@ dig(data, 'level3'); // 'some data'
 dig(data, 'level4'); // undefined
 ```
 
+### equals
+
+深度比较
+
+```js
+const equals = (a, b) => {
+  // 对于基本类型，直接使用全等符号 `===`
+  if (a === b) return true;
+  // 对于 `Date` 对象，使用 `Date.getTime()` 获得的值进行比较
+  if (a instanceof Date && b instanceof Date) return a.getTime() === b.getTime();
+  // typeof null === 'object'
+  if (!a || !b || (typeof a !== 'object' && typeof b !== 'object')) return a === b;
+  if (a === null || a === undefined || b === null || b === undefined) return false;
+  // 检查 prototype 属性是否相同
+  if (a.prototype !== b.prototype) return false;
+  let keys = Object.keys(a);
+  // 先看属性数目
+  if (keys.length !== Object.keys(b).length) return false;
+  return keys.every(k => equals(a[k], b[k])); // 进行迭代
+};
+```
+
+```js
+equals({ a: [2, { e: 3 }], b: [4], c: 'foo' }, { a: [2, { e: 3 }], b: [4], c: 'foo' }); // true
+```
+
 </details>
 
 ## 📜 string
@@ -1285,6 +1480,45 @@ const decapitalize = ([first, ...rest], upperRest = false) =>
 ```js
 decapitalize('FooBar'); // 'fooBar'
 decapitalize('FooBar', true); // 'fOOBAR'
+```
+
+### escapeHTML
+
+escape 用于 HTML 中的特殊字符
+
+在 `String.prototype.replace()` 的第二个参数中进行替换
+
+```js
+const escapeHTML = str =>
+  str.replace(
+    /[&<>'"]/g,
+    tag =>
+      ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+      }[tag] || tag)
+  );
+```
+
+```js
+escapeHTML('<a href="#">Me & you</a>'); // '&lt;a href=&quot;#&quot;&gt;Me &amp; you&lt;/a&gt;'
+```
+
+### escapeRegExp
+
+将一个字符串转换成可以用在正则表达式中的样式
+
+使用 `String.prototype.replace()`
+
+```js
+const escapeRegExp = str => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+```
+
+```js
+escapeRegExp('(test)'); // \\(test\\)
 ```
 
 </details>
