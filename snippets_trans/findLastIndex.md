@@ -1,6 +1,6 @@
 ### findLastIndex
 
-返回使得函数返回真值的最后一个元素的下表
+返回使得函数返回真值的最后一个元素的下标
 
 ```js
 const findLastIndex = (arr, fn) =>

@@ -59,6 +59,24 @@ let p3 = new Promise(resolve => setTimeout(resolve, 2000, 3));
 Pall(p1, p2, p3).then(console.log); // [1, 2, 3] (after about 2 seconds)
 ```
 
+### flip
+
+返回一个函数，该函数将第一个参数当做最后一个参数调用 `fn`
+
+```js
+const flip = fn => (first, ...rest) => fn(...rest, first);
+```
+
+```js
+let a = { name: 'John Smith' };
+let b = {};
+const mergeFrom = flip(Object.assign);
+let mergePerson = mergeFrom.bind(null, a);
+mergePerson(b); // == b
+b = {};
+Object.assign(b, a); // == b
+```
+
 </details>
 
 ## 📚 array
@@ -427,7 +445,7 @@ findLast([1, 2, 3, 4], n => n % 2 === 1); // 3
 
 ### findLastIndex
 
-返回使得函数返回真值的最后一个元素的下表
+返回使得函数返回真值的最后一个元素的下标
 
 ```js
 const findLastIndex = (arr, fn) =>
@@ -439,6 +457,38 @@ const findLastIndex = (arr, fn) =>
 
 ```js
 findLastIndex([1, 2, 3, 4], n => n % 2 === 1); // 2 (index of the value 3)
+```
+
+### flatten
+
+展平数组至指定深度
+
+迭代
+
+```js
+const flatten = (arr, depth = 1) =>
+  arr.reduce((a, v) => a.concat(depth > 1 && Array.isArray(v) ? flatten(v, depth - 1) : v), []);
+```
+
+```js
+flatten([1, [2], 3, 4]); // [1, 2, 3, 4]
+flatten([1, [2, [3, [4, 5], 6], 7], 8], 2); // [1, 2, 3, [4, 5], 6, 7, 8]
+```
+
+### forEachRight
+
+从后向前依次传入数组元素作为函数参数
+
+```js
+const forEachRight = (arr, callback) =>
+  arr
+    .slice(0)
+    .reverse()
+    .forEach(callback);
+```
+
+```js
+forEachRight([1, 2, 3, 4], val => console.log(val)); // '4', '3', '2', '1'
 ```
 
 </details>
@@ -724,6 +774,34 @@ const dayOfYear = date =>
 
 ```js
 dayOfYear(new Date()); // 272
+```
+
+### formatDuration
+
+返回易读的时间
+
+将 `ms` 数转成使用 `day`, `hour`, `minute`, `second` 和 `millisecond` 单位表示的值
+
+```js
+const formatDuration = ms => {
+  if (ms < 0) ms = -ms;
+  const time = {
+    day: Math.floor(ms / 86400000),
+    hour: Math.floor(ms / 3600000) % 24,
+    minute: Math.floor(ms / 60000) % 60,
+    second: Math.floor(ms / 1000) % 60,
+    millisecond: Math.floor(ms) % 1000
+  };
+  return Object.entries(time)
+    .filter(val => val[1] !== 0)
+    .map(([key, val]) => `${val} ${key}${val !== 1 ? 's' : ''}`)
+    .join(', ');
+};
+```
+
+```js
+formatDuration(1001); // '1 second, 1 millisecond'
+formatDuration(34325055574); // '397 days, 6 hours, 44 minutes, 15 seconds, 574 milliseconds'
 ```
 
 </details>
@@ -1504,6 +1582,48 @@ findKey(
   },
   o => o['active']
 ); // 'barney'
+```
+
+### findLastKey
+
+返回使得函数返回真值的最后一个元素的键
+
+```js
+const findLastKey = (obj, fn) =>
+  Object.keys(obj)
+    .reverse()
+    .find(key => fn(obj[key], key, obj));
+```
+
+```js
+findLastKey(
+  {
+    barney: { age: 36, active: true },
+    fred: { age: 40, active: false },
+    pebbles: { age: 1, active: true }
+  },
+  o => o['active']
+); // 'pebbles'
+```
+
+### flattenObject
+
+以路径为键名展平一个对象
+
+使用递归
+
+```js
+const flattenObject = (obj, prefix = '') =>
+  Object.keys(obj).reduce((acc, k) => {
+    const pre = prefix.length ? prefix + '.' : '';
+    if (typeof obj[k] === 'object') Object.assign(acc, flattenObject(obj[k], pre + k));
+    else acc[pre + k] = obj[k];
+    return acc;
+  }, {});
+```
+
+```js
+flattenObject({ a: { b: { c: 1 } }, d: 1 }); // { 'a.b.c': 1, d: 1 }
 ```
 
 </details>
