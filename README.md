@@ -778,6 +778,19 @@ const squareIt = arr => mapObject(arr, a => a * a);
 squareIt([1, 2, 3]); // { 1: 1, 2: 4, 3: 9 }
 ```
 
+### maxN
+
+返回数组中最大的 `n` 个数
+
+```js
+const maxN = (arr, n = 1) => [...arr].sort((a, b) => b - a).slice(0, n);
+```
+
+```js
+maxN([1, 2, 3]); // [3]
+maxN([1, 2, 3], 2); // [3,2]
+```
+
 </details>
 
 ## 🌐 browser
@@ -1332,6 +1345,24 @@ const isSameDate = (dateA, dateB) => dateA.toISOString() === dateB.toISOString()
 isSameDate(new Date(2010, 10, 20), new Date(2010, 10, 20)); // true
 ```
 
+### maxDate
+
+返回一组日期对象中的最大值
+
+```js
+const maxDate = (...dates) => new Date(Math.max.apply(null, ...dates));
+```
+
+```js
+const array = [
+  new Date(2017, 4, 13),
+  new Date(2018, 2, 12),
+  new Date(2016, 0, 10),
+  new Date(2016, 0, 9)
+];
+maxDate(array); // 2018-03-11T22:00:00.000Z
+```
+
 </details>
 
 ## 🎛️ function
@@ -1634,6 +1665,31 @@ const sumForLoop = () => {
 // `sumForLoop` is nearly 10 times faster
 Math.round(hz(sumReduce)); // 572
 Math.round(hz(sumForLoop)); // 4784
+```
+
+### memoize
+
+返回缓存了的函数
+
+使用 `Map` 对象
+
+```js
+const memoize = fn => {
+  const cache = new Map();
+  const cached = function(val) {
+    return cache.has(val) ? cache.get(val) : cache.set(val, fn.call(this, val)) && cache.get(val);
+  };
+  cached.cache = cache;
+  return cached;
+};
+```
+
+```js
+// See the `anagrams` snippet.
+const anagramsCached = memoize(anagrams);
+anagramsCached('javascript'); // takes a long time
+anagramsCached('javascript'); // returns virtually instantly since it's now cached
+console.log(anagramsCached.cache); // The cached anagrams map
 ```
 
 </details>
@@ -2021,6 +2077,35 @@ const luhnCheck = num => {
 luhnCheck('4485275742308327'); // true
 luhnCheck(6011329933655299); //  false
 luhnCheck(123456789); // false
+```
+
+### maxBy
+
+返回对象数组的元素按某种规则运算后返回值得最大值
+
+```js
+const maxBy = (arr, fn) => Math.max(...arr.map(typeof fn === 'function' ? fn : val => val[fn]));
+```
+
+```js
+maxBy([{ n: 4 }, { n: 2 }, { n: 8 }, { n: 6 }], o => o.n); // 8
+maxBy([{ n: 4 }, { n: 2 }, { n: 8 }, { n: 6 }], 'n'); // 8
+```
+
+### median
+
+返回数组的中位值
+
+```js
+const median = arr => {
+  const mid = Math.floor(arr.length / 2),
+    nums = [...arr].sort((a, b) => a - b);
+  return arr.length % 2 !== 0 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
+};
+```
+
+```js
+median([5, 6, 50, 1, -5]); // 5
 ```
 
 </details>
@@ -2641,6 +2726,63 @@ const mapKeys = (obj, fn) =>
 mapKeys({ a: 1, b: 2 }, (val, key) => key + val); // { a1: 1, b2: 2 }
 ```
 
+### mapValues
+
+键为原来的键，值为原来的值经过函数处理之后生成的值
+
+```js
+const mapValues = (obj, fn) =>
+  Object.keys(obj).reduce((acc, k) => {
+    acc[k] = fn(obj[k], k, obj);
+    return acc;
+  }, {});
+```
+
+```js
+const users = {
+  fred: { user: 'fred', age: 40 },
+  pebbles: { user: 'pebbles', age: 1 }
+};
+mapValues(users, u => u.age); // { fred: 40, pebbles: 1 }
+```
+
+### matches
+
+第一个对象是第二个对象的超集则返回真
+
+```js
+const matches = (obj, source) =>
+  Object.keys(source).every(key => obj.hasOwnProperty(key) && obj[key] === source[key]);
+```
+
+```js
+matches({ age: 25, hair: 'long', beard: true }, { hair: 'long', beard: true }); // true
+matches({ hair: 'long', beard: true }, { age: 25, hair: 'long', beard: true }); // false
+```
+
+### matchesWith
+
+第一个对象键值处理结果是第二个对象键值处理结果的超集则返回真
+
+```js
+const matchesWith = (obj, source, fn) =>
+  Object.keys(source).every(
+    key =>
+      obj.hasOwnProperty(key) && fn
+        ? fn(obj[key], source[key], key, obj, source)
+        : obj[key] == source[key]
+  );
+```
+
+```js
+const isGreeting = val => /^h(?:i|ello)$/.test(val);
+matchesWith(
+  { greeting: 'hello' },
+  { greeting: 'hi' },
+  (oV, sV) => isGreeting(oV) && isGreeting(sV)
+); // true
+```
+
 </details>
 
 ## 📜 string
@@ -2900,6 +3042,36 @@ const isUpperCase = str => str === str.toUpperCase();
 isUpperCase('ABC'); // true
 isLowerCase('A3@$'); // true
 isLowerCase('aB4'); // false
+```
+
+### mapString
+
+对指定字串的每个字符执行某一函数 `fn` 并将结果拼接成新的字串
+
+```js
+const mapString = (str, fn) =>
+  str
+    .split('')
+    .map((c, i) => fn(c, i, str))
+    .join('');
+```
+
+```js
+mapString('lorem ipsum', c => c.toUpperCase()); // 'LOREM IPSUM'
+```
+
+### mask
+
+将字符串除了最后 `num` 位的字串替换成 `mask`, `num` 可以为负
+
+```js
+const mask = (cc, num = 4, mask = '*') => `${cc}`.slice(-num).padStart(`${cc}`.length, mask);
+```
+
+```js
+mask(1234567890); // '******7890'
+mask(1234567890, 3); // '*******890'
+mask(1234567890, -4, '$'); // '$$$$567890'
 ```
 
 </details>
