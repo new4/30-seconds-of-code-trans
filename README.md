@@ -689,6 +689,95 @@ isSorted([4, 3, 2]); // -1
 isSorted([4, 3, 5]); // 0
 ```
 
+### join
+
+组合数组元素为分隔符拼接的字串
+
+```js
+const join = (arr, separator = ',', end = separator) =>
+  arr.reduce(
+    (acc, val, i) =>
+      i === arr.length - 2
+        ? acc + val + end
+        : i === arr.length - 1
+          ? acc + val
+          : acc + val + separator,
+    ''
+  );
+```
+
+```js
+join(['pen', 'pineapple', 'apple', 'pen'], ',', '&'); // "pen,pineapple,apple&pen"
+join(['pen', 'pineapple', 'apple', 'pen'], ','); // "pen,pineapple,apple,pen"
+join(['pen', 'pineapple', 'apple', 'pen']); // "pen,pineapple,apple,pen"
+```
+
+### JSONtoCSV
+
+将对象数组转换成 CSV 字串，可以指定分隔符
+
+```js
+const JSONtoCSV = (arr, columns, delimiter = ',') =>
+  [
+    columns.join(delimiter),
+    ...arr.map(obj =>
+      columns.reduce(
+        (acc, key) => `${acc}${!acc.length ? '' : delimiter}"${!obj[key] ? '' : obj[key]}"`,
+        ''
+      )
+    )
+  ].join('\n');
+```
+
+```js
+JSONtoCSV([{ a: 1, b: 2 }, { a: 3, b: 4, c: 5 }, { a: 6 }, { b: 7 }], ['a', 'b']); // 'a,b\n"1","2"\n"3","4"\n"6",""\n"","7"'
+JSONtoCSV([{ a: 1, b: 2 }, { a: 3, b: 4, c: 5 }, { a: 6 }, { b: 7 }], ['a', 'b'], ';'); // 'a;b\n"1";"2"\n"3";"4"\n"6";""\n"";"7"'
+```
+
+### last
+
+返回数组的最后一个元素
+
+```js
+const last = arr => arr[arr.length - 1];
+```
+
+```js
+last([1, 2, 3]); // 3
+```
+
+### longestItem
+
+返回数组元素（须含有 `length` 属性）长度最长的那一个，如果有两个一样长的，返回第一个
+
+```js
+const longestItem = (...vals) => vals.reduce((a, x) => (x.length > a.length ? x : a));
+```
+
+```js
+longestItem('this', 'is', 'a', 'testcase'); // 'testcase'
+longestItem(...['a', 'ab', 'abc']); // 'abc'
+longestItem(...['a', 'ab', 'abc'], 'abcd'); // 'abcd'
+longestItem([1, 2, 3], [1, 2], [1, 2, 3, 4, 5]); // [1, 2, 3, 4, 5]
+longestItem([1, 2, 3], 'foobar'); // 'foobar'
+```
+
+### mapObject
+
+依据数组重新构造一个对象，新对象的键名为数组元素的值，键值为 `fn` 执行之后的返回值
+
+```js
+const mapObject = (arr, fn) =>
+  (a => (
+    (a = [arr, arr.map(fn)]), a[0].reduce((acc, val, ind) => ((acc[val] = a[1][ind]), acc), {})
+  ))();
+```
+
+```js
+const squareIt = arr => mapObject(arr, a => a * a);
+squareIt([1, 2, 3]); // { 1: 1, 2: 4, 3: 9 }
+```
+
 </details>
 
 ## 🌐 browser
@@ -1892,6 +1981,48 @@ const isPrime = num => {
 isPrime(11); // true
 ```
 
+### lcm
+
+最小公倍数
+
+用到最大公约数（gcd）和公式 `lcm(x,y) = x * y / gcd(x,y)`
+
+```js
+const lcm = (...arr) => {
+  const gcd = (x, y) => (!y ? x : gcd(y, x % y));
+  const _lcm = (x, y) => (x * y) / gcd(x, y);
+  return [...arr].reduce((a, b) => _lcm(a, b));
+};
+```
+
+```js
+lcm(12, 7); // 84
+lcm(...[1, 3, 4, 5]); // 60
+```
+
+### luhnCheck
+
+实现 [Luhn 算法](https://en.wikipedia.org/wiki/Luhn_algorithm)
+
+```js
+const luhnCheck = num => {
+  let arr = (num + '')
+    .split('')
+    .reverse()
+    .map(x => parseInt(x));
+  let lastDigit = arr.splice(0, 1)[0];
+  let sum = arr.reduce((acc, val, i) => (i % 2 !== 0 ? acc + val : acc + ((val * 2) % 9) || 9), 0);
+  sum += lastDigit;
+  return sum % 10 === 0;
+};
+```
+
+```js
+luhnCheck('4485275742308327'); // true
+luhnCheck(6011329933655299); //  false
+luhnCheck(123456789); // false
+```
+
 </details>
 
 ## 📦 node
@@ -2089,6 +2220,22 @@ const isWritableStream = val =>
 ```js
 const fs = require('fs');
 isWritableStream(fs.createWriteStream('test.txt')); // true
+```
+
+### JSONToFile
+
+将 `JSON` 对象写入文件
+
+使用 `fs.writeFile()` 和 `JSON.stringify()`
+
+```js
+const fs = require('fs');
+const JSONToFile = (obj, filename) =>
+  fs.writeFile(`${filename}.json`, JSON.stringify(obj, null, 2));
+```
+
+```js
+JSONToFile({ test: 'is passed' }, 'testJsonFile'); // writes the object to 'testJsonFile.json'
 ```
 
 </details>
@@ -2459,6 +2606,39 @@ const invertKeyValues = (obj, fn) =>
 ```js
 invertKeyValues({ a: 1, b: 2, c: 1 }); // { 1: [ 'a', 'c' ], 2: [ 'b' ] }
 invertKeyValues({ a: 1, b: 2, c: 1 }, value => 'group' + value); // { group1: [ 'a', 'c' ], group2: [ 'b' ] }
+```
+
+### lowercaseKeys
+
+将指定对象的键名转换成小写形式
+
+```js
+const lowercaseKeys = obj =>
+  Object.keys(obj).reduce((acc, key) => {
+    acc[key.toLowerCase()] = obj[key];
+    return acc;
+  }, {});
+```
+
+```js
+const myObj = { Name: 'Adam', sUrnAME: 'Smith' };
+const myObjLower = lowercaseKeys(myObj); // {name: 'Adam', surname: 'Smith'};
+```
+
+### mapKeys
+
+根据 `fn` 重新生成对象的键名
+
+```js
+const mapKeys = (obj, fn) =>
+  Object.keys(obj).reduce((acc, k) => {
+    acc[fn(obj[k], k, obj)] = obj[k];
+    return acc;
+  }, {});
+```
+
+```js
+mapKeys({ a: 1, b: 2 }, (val, key) => key + val); // { a1: 1, b2: 2 }
 ```
 
 </details>
