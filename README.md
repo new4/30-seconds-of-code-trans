@@ -520,6 +520,154 @@ const head = arr => arr[0];
 head([1, 2, 3]); // 1
 ```
 
+### indexOfAll
+
+返回数组中所有 `val` 的下标
+
+使用 `Array.prototype.reduce()`
+
+```js
+const indexOfAll = (arr, val) => arr.reduce((acc, el, i) => (el === val ? [...acc, i] : acc), []);
+```
+
+```js
+indexOfAll([1, 2, 3, 1, 2, 3], 1); // [0,3]
+indexOfAll([1, 2, 3], 4); // []
+```
+
+### initial
+
+返回数组中除最后一个值的其它值
+
+```js
+const initial = arr => arr.slice(0, -1);
+```
+
+```js
+initial([1, 2, 3]); // [1,2]
+```
+
+### initialize2DArray
+
+用指定的 `width`, `height` 和 `val` 初始化一个二维数组
+
+`IE` 不支持 `Array.prototype.fill`，此处有个 [polyfill](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Array/fill)
+
+```js
+const initialize2DArray = (w, h, val = null) =>
+  Array.from({ length: h }).map(() => Array.from({ length: w }).fill(val)); // IE 不支持 Array.prototype.fill
+```
+
+```js
+initialize2DArray(2, 2, 0); // [[0,0], [0,0]]
+```
+
+### initializeArrayWithRange
+
+使用指定范围 `start` 和 `end` 来初始化一个数组，还可以指定步距 `step`
+
+```js
+const initializeArrayWithRange = (end, start = 0, step = 1) =>
+  Array.from({ length: Math.ceil((end - start + 1) / step) }, (v, i) => i * step + start);
+```
+
+```js
+initializeArrayWithRange(5); // [0,1,2,3,4,5]
+initializeArrayWithRange(7, 3); // [3,4,5,6,7]
+initializeArrayWithRange(9, 0, 2); // [0,2,4,6,8]
+```
+
+### initializeArrayWithRangeRight
+
+使用指定范围 `start` 和 `end` 来初始化（从右向左）一个数组，还可以指定步距 `step`
+
+```js
+const initializeArrayWithRangeRight = (end, start = 0, step = 1) =>
+  Array.from({ length: Math.ceil((end + 1 - start) / step) }).map(
+    (v, i, arr) => (arr.length - i - 1) * step + start
+  );
+```
+
+```js
+initializeArrayWithRangeRight(5); // [5,4,3,2,1,0]
+initializeArrayWithRangeRight(7, 3); // [7,6,5,4,3]
+initializeArrayWithRangeRight(9, 0, 2); // [8,6,4,2,0]
+```
+
+### initializeArrayWithValues
+
+使用特定的值来初始化数组
+
+```js
+const initializeArrayWithValues = (n, val = 0) => Array(n).fill(val);
+```
+
+```js
+initializeArrayWithValues(5, 2); // [2, 2, 2, 2, 2]
+```
+
+### initializeNDArray
+
+使用指定值初始化 n 维数组（列）
+
+使用递归
+
+使用 `Array.prototype.map()` 生成每一行，然后该行的每个元素又递归调用初始化函数
+
+```js
+const initializeNDArray = (val, ...args) =>
+  args.length === 0
+    ? val
+    : Array.from({ length: args[0] }).map(() => initializeNDArray(val, ...args.slice(1)));
+```
+
+```js
+initializeNDArray(1, 3); // [1,1,1]
+initializeNDArray(5, 2, 2, 2); // [[[5,5],[5,5]],[[5,5],[5,5]]]
+```
+
+### intersection
+
+返回两个数组的交集
+
+```js
+const intersection = (a, b) => {
+  const s = new Set(b);
+  return a.filter(x => s.has(x));
+};
+```
+
+```js
+intersection([1, 2, 3], [4, 3, 2]); // [2, 3]
+```
+
+### intersectionBy
+
+返回两个数组元素运行结果的交集
+
+```js
+const intersectionBy = (a, b, fn) => {
+  const s = new Set(b.map(fn));
+  return a.filter(x => s.has(fn(x)));
+};
+```
+
+```js
+intersectionBy([2.1, 1.2], [2.3, 3.4], Math.floor); // [2.1]
+```
+
+### intersectionWith
+
+按照一定规则的比较函数结果取交集，其实也算是过滤
+
+```js
+const intersectionWith = (a, b, comp) => a.filter(x => b.findIndex(y => comp(x, y)) !== -1);
+```
+
+```js
+intersectionWith([1, 1.2, 1.5, 3, 0], [1.9, 3, 0, 3.9], (a, b) => Math.round(a) === Math.round(b)); // [1.5, 3, 0]
+```
+
 </details>
 
 ## 🌐 browser
@@ -894,6 +1042,34 @@ const httpsRedirect = () => {
 httpsRedirect(); // If you are on http://mydomain.com, you are redirected to https://mydomain.com
 ```
 
+### insertAfter
+
+在指定元素后面插入一个 HTML 字串
+
+使用 `el.insertAdjacentHTML()`
+
+```js
+const insertAfter = (el, htmlString) => el.insertAdjacentHTML('afterend', htmlString);
+```
+
+```js
+insertAfter(document.getElementById('myId'), '<p>after</p>'); // <div id="myId">...</div> <p>after</p>
+```
+
+### insertBefore
+
+在指定元素尾前面插入一个 HTML 字串
+
+使用 `el.insertAdjacentHTML()`
+
+```js
+const insertBefore = (el, htmlString) => el.insertAdjacentHTML('beforebegin', htmlString);
+```
+
+```js
+insertBefore(document.getElementById('myId'), '<p>before</p>'); // <p>before</p> <div id="myId">...</div>
+```
+
 </details>
 
 ## ⏱️ date
@@ -990,6 +1166,30 @@ getMeridiemSuffixOfInteger(0); // "12am"
 getMeridiemSuffixOfInteger(11); // "11am"
 getMeridiemSuffixOfInteger(13); // "1pm"
 getMeridiemSuffixOfInteger(25); // "1pm"
+```
+
+### isAfterDate
+
+检测一个日期对象是否是另一个后面的日期
+
+```js
+const isAfterDate = (dateA, dateB) => dateA > dateB;
+```
+
+```js
+isAfterDate(new Date(2010, 10, 21), new Date(2010, 10, 20)); // true
+```
+
+### isBeforeDate
+
+检测一个日期对象是否是另一个前面的日期
+
+```js
+const isBeforeDate = (dateA, dateB) => dateA < dateB;
+```
+
+```js
+isBeforeDate(new Date(2010, 10, 20), new Date(2010, 10, 21)); // true
 ```
 
 </details>
@@ -1570,6 +1770,24 @@ const hammingDistance = (num1, num2) => ((num1 ^ num2).toString(2).match(/1/g) |
 hammingDistance(2, 3); // 1
 ```
 
+### inRange
+
+检查给定的数字是否落在指定区间内
+
+```js
+const inRange = (n, start, end = null) => {
+  if (end && start > end) [end, start] = [start, end]; // 调整区间范围
+  return end == null ? n >= 0 && n < start : n >= start && n < end; // 未指定 end，区间就是 [0, start]
+};
+```
+
+```js
+inRange(3, 2, 5); // true
+inRange(3, 4); // true
+inRange(2, 3, 5); // false
+inRange(3, 2); // false
+```
+
 </details>
 
 ## 📦 node
@@ -2035,6 +2253,25 @@ const obj = { selector: { to: { val: 'val to select' } }, target: [1, 2, { a: 't
 get(obj, 'selector.to.val', 'target[0]', 'target[2].a'); // ['val to select', 1, 'test']
 ```
 
+### invertKeyValues
+
+倒置一个对象的键值对，可以传入 `fn` 来生成新的键名
+
+```js
+const invertKeyValues = (obj, fn) =>
+  Object.keys(obj).reduce((acc, key) => {
+    const val = fn ? fn(obj[key]) : obj[key];
+    acc[val] = acc[val] || [];
+    acc[val].push(key);
+    return acc;
+  }, {});
+```
+
+```js
+invertKeyValues({ a: 1, b: 2, c: 1 }); // { 1: [ 'a', 'c' ], 2: [ 'b' ] }
+invertKeyValues({ a: 1, b: 2, c: 1 }, value => 'group' + value); // { group1: [ 'a', 'c' ], group2: [ 'b' ] }
+```
+
 </details>
 
 ## 📜 string
@@ -2233,6 +2470,41 @@ indentString('Lorem\nIpsum', 2); // '  Lorem\n  Ipsum'
 indentString('Lorem\nIpsum', 2, '_'); // '__Lorem\n__Ipsum'
 ```
 
+### isAbsoluteURL
+
+检测 `URL` 是否是绝对地址
+
+```js
+const isAbsoluteURL = str => /^[a-z][a-z0-9+.-]*:/.test(str);
+```
+
+```js
+isAbsoluteURL('https://google.com'); // true
+isAbsoluteURL('ftp://www.myserver.net'); // true
+isAbsoluteURL('/foo/bar'); // false
+```
+
+### isAnagram
+
+检测一个字串是否是另一个的异位构成字串（大小写不敏感，忽略空格，标点和特殊字符）
+
+```js
+const isAnagram = (str1, str2) => {
+  const normalize = str =>
+    str
+      .toLowerCase()
+      .replace(/[^a-z0-9]/gi, '') // 去掉非字母数字的字符
+      .split('')
+      .sort()
+      .join('');
+  return normalize(str1) === normalize(str2);
+};
+```
+
+```js
+isAnagram('iceman', 'cinema'); // true
+```
+
 </details>
 
 ## 📃 type
@@ -2252,6 +2524,46 @@ const getType = v =>
 
 ```js
 getType(new Set([1, 2, 3])); // 'set'
+```
+
+### is
+
+类型检测
+
+```js
+const is = (type, val) => ![, null].includes(val) && val.constructor === type;
+```
+
+```js
+is(Array, [1]); // true
+is(ArrayBuffer, new ArrayBuffer()); // true
+is(Map, new Map()); // true
+is(RegExp, /./g); // true
+is(Set, new Set()); // true
+is(WeakMap, new WeakMap()); // true
+is(WeakSet, new WeakSet()); // true
+is(String, ''); // true
+is(String, new String('')); // true
+is(Number, 1); // true
+is(Number, new Number(1)); // true
+is(Boolean, true); // true
+is(Boolean, new Boolean(true)); // true
+```
+
+### isArrayLike
+
+检测是否是类数组对象（如，iterable 可迭代对象）
+
+非 `null` 且它的 `Symbol.iterator` 属性是一个函数
+
+```js
+const isArrayLike = obj => obj != null && typeof obj[Symbol.iterator] === 'function';
+```
+
+```js
+isArrayLike(document.querySelectorAll('.className')); // true
+isArrayLike('abc'); // true
+isArrayLike(null); // false
 ```
 
 </details>
