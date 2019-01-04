@@ -668,6 +668,27 @@ const intersectionWith = (a, b, comp) => a.filter(x => b.findIndex(y => comp(x, 
 intersectionWith([1, 1.2, 1.5, 3, 0], [1.9, 3, 0, 3.9], (a, b) => Math.round(a) === Math.round(b)); // [1.5, 3, 0]
 ```
 
+### isSorted
+
+升序返回 `1`, 降序返回 `-1`, 无序返回 `0`
+
+```js
+const isSorted = arr => {
+  let direction = -(arr[0] - arr[1]); // 先计算首两位的方向
+  for (let [i, val] of arr.entries()) {
+    direction = !direction ? -(arr[i - 1] - arr[i]) : direction;
+    if (i === arr.length - 1) return !direction ? 0 : direction;
+    else if ((val - arr[i + 1]) * direction > 0) return 0;
+  }
+};
+```
+
+```js
+isSorted([0, 1, 2, 2]); // 1
+isSorted([4, 3, 2]); // -1
+isSorted([4, 3, 5]); // 0
+```
+
 </details>
 
 ## 🌐 browser
@@ -1070,6 +1091,22 @@ const insertBefore = (el, htmlString) => el.insertAdjacentHTML('beforebegin', ht
 insertBefore(document.getElementById('myId'), '<p>before</p>'); // <p>before</p> <div id="myId">...</div>
 ```
 
+### isBrowserTabFocused
+
+Returns `true` if the browser tab of the page is focused, `false` otherwise.
+
+检查当前页面是否是聚焦的
+
+使用 `Document.hidden` 属性, [Page Visibility API](https://developer.mozilla.org/zh-CN/docs/Web/API/Page_Visibility_API)
+
+```js
+const isBrowserTabFocused = () => !document.hidden;
+```
+
+```js
+isBrowserTabFocused(); // true
+```
+
 </details>
 
 ## ⏱️ date
@@ -1190,6 +1227,20 @@ const isBeforeDate = (dateA, dateB) => dateA < dateB;
 
 ```js
 isBeforeDate(new Date(2010, 10, 20), new Date(2010, 10, 21)); // true
+```
+
+### isSameDate
+
+两个日期是否相等
+
+使用 `Date.prototype.toISOString()`
+
+```js
+const isSameDate = (dateA, dateB) => dateA.toISOString() === dateB.toISOString();
+```
+
+```js
+isSameDate(new Date(2010, 10, 20), new Date(2010, 10, 20)); // true
 ```
 
 </details>
@@ -1788,6 +1839,59 @@ inRange(2, 3, 5); // false
 inRange(3, 2); // false
 ```
 
+### isDivisible
+
+检查可除性
+
+```js
+const isDivisible = (dividend, divisor) => dividend % divisor === 0;
+```
+
+```js
+isDivisible(6, 3); // true
+```
+
+### isEven
+
+是否是偶数
+
+```js
+const isEven = num => num % 2 === 0;
+```
+
+```js
+isEven(3); // false
+```
+
+### isNegativeZero
+
+是否是 `-0`
+
+```js
+const isNegativeZero = val => val === 0 && 1 / val === -Infinity;
+```
+
+```js
+isNegativeZero(-0); // true
+isNegativeZero(0); // false
+```
+
+### isPrime
+
+是否是素数
+
+```js
+const isPrime = num => {
+  const boundary = Math.floor(Math.sqrt(num));
+  for (var i = 2; i <= boundary; i++) if (num % i === 0) return false;
+  return num >= 2;
+};
+```
+
+```js
+isPrime(11); // true
+```
+
 </details>
 
 ## 📦 node
@@ -1900,6 +2004,91 @@ const hashNode = val =>
 
 ```js
 hashNode(JSON.stringify({ a: 'a', b: [1, 2, 3, 4], foo: { c: 'bar' } })).then(console.log); // '04aa106279f5977f59f9067fa9712afc4aedc6f5862a8defc34552d8c7206393'
+```
+
+### isDuplexStream
+
+检查给定的参数是双向流
+
+```js
+const isDuplexStream = val =>
+  val !== null &&
+  typeof val === 'object' &&
+  typeof val.pipe === 'function' &&
+  typeof val._read === 'function' &&
+  typeof val._readableState === 'object' &&
+  typeof val._write === 'function' &&
+  typeof val._writableState === 'object';
+```
+
+```js
+const Stream = require('stream');
+isDuplexStream(new Stream.Duplex()); // true
+```
+
+### isReadableStream
+
+是否是可读流
+
+```js
+const isReadableStream = val =>
+  val !== null &&
+  typeof val === 'object' &&
+  typeof val.pipe === 'function' &&
+  typeof val._read === 'function' &&
+  typeof val._readableState === 'object';
+```
+
+```js
+const fs = require('fs');
+isReadableStream(fs.createReadStream('test.txt')); // true
+```
+
+### isStream
+
+是否是流
+
+检测 `pipe` 属性
+
+```js
+const isStream = val => val !== null && typeof val === 'object' && typeof val.pipe === 'function';
+```
+
+```js
+const fs = require('fs');
+isStream(fs.createReadStream('test.txt')); // true
+```
+
+### isTravisCI
+
+检测当前环境是否是 [Travis CI](https://travis-ci.org/).
+
+是否有环境变量 `TRAVIS` 和 `CI`  ([reference](https://docs.travis-ci.com/user/environment-variables/#Default-Environment-Variables)).
+
+```js
+const isTravisCI = () => 'TRAVIS' in process.env && 'CI' in process.env;
+```
+
+```js
+isTravisCI(); // true (if code is running on Travis CI)
+```
+
+### isWritableStream
+
+是否是可写流
+
+```js
+const isWritableStream = val =>
+  val !== null &&
+  typeof val === 'object' &&
+  typeof val.pipe === 'function' &&
+  typeof val._write === 'function' &&
+  typeof val._writableState === 'object';
+```
+
+```js
+const fs = require('fs');
+isWritableStream(fs.createWriteStream('test.txt')); // true
 ```
 
 </details>
@@ -2505,6 +2694,34 @@ const isAnagram = (str1, str2) => {
 isAnagram('iceman', 'cinema'); // true
 ```
 
+### isLowerCase
+
+检查字串是否是小写形式
+
+```js
+const isLowerCase = str => str === str.toLowerCase();
+```
+
+```js
+isLowerCase('abc'); // true
+isLowerCase('a3@$'); // true
+isLowerCase('Ab4'); // false
+```
+
+### isUpperCase
+
+是否是大写形式
+
+```js
+const isUpperCase = str => str === str.toUpperCase();
+```
+
+```js
+isUpperCase('ABC'); // true
+isLowerCase('A3@$'); // true
+isLowerCase('aB4'); // false
+```
+
 </details>
 
 ## 📃 type
@@ -2564,6 +2781,233 @@ const isArrayLike = obj => obj != null && typeof obj[Symbol.iterator] === 'funct
 isArrayLike(document.querySelectorAll('.className')); // true
 isArrayLike('abc'); // true
 isArrayLike(null); // false
+```
+
+### isBoolean
+
+检查元素是否是原生的 `boolean` 元素
+
+```js
+const isBoolean = val => typeof val === 'boolean';
+```
+
+```js
+isBoolean(null); // false
+isBoolean(false); // true
+```
+
+### isEmpty
+
+是否是空对象，空集合，空 `Map`，空 `Set`
+
+```js
+const isEmpty = val => val == null || !(Object.keys(val) || val).length;
+```
+
+```js
+isEmpty(new Map()); // true
+isEmpty(new Set()); // true
+isEmpty([]); // true
+isEmpty({}); // true
+isEmpty(''); // true
+isEmpty([1, 2]); // false
+isEmpty({ a: 1, b: 2 }); // false
+isEmpty('text'); // false
+isEmpty(123); // true - type is not considered a collection
+isEmpty(true); // true - type is not considered a collection
+```
+
+### isFunction
+
+是否是函数
+
+```js
+const isFunction = val => typeof val === 'function';
+```
+
+```js
+isFunction('x'); // false
+isFunction(x => x); // true
+```
+
+### isNil
+
+是否是 `null` 或者 `undefined`
+
+```js
+const isNil = val => val === undefined || val === null;
+```
+
+```js
+isNil(null); // true
+isNil(undefined); // true
+```
+
+### isNull
+
+是否是 `null`
+
+```js
+const isNull = val => val === null;
+```
+
+```js
+isNull(null); // true
+```
+
+### isNumber
+
+是否是数字
+
+```js
+const isNumber = val => typeof val === 'number';
+```
+
+```js
+isNumber('1'); // false
+isNumber(1); // true
+```
+
+### isObject
+
+是否是对象
+
+```js
+const isObject = obj => obj === Object(obj);
+```
+
+```js
+isObject([1, 2, 3, 4]); // true
+isObject([]); // true
+isObject(['Hello!']); // true
+isObject({ a: 1 }); // true
+isObject({}); // true
+isObject(true); // false
+```
+
+### isObjectLike
+
+是否是类对象
+
+```js
+const isObjectLike = val => val !== null && typeof val === 'object';
+```
+
+```js
+isObjectLike({}); // true
+isObjectLike([1, 2, 3]); // true
+isObjectLike(x => x); // false
+isObjectLike(null); // false
+```
+
+### isPlainObject
+
+是否是 `plain object`
+
+```js
+const isPlainObject = val => !!val && typeof val === 'object' && val.constructor === Object;
+```
+
+```js
+isPlainObject({ a: 1 }); // true
+isPlainObject(new Map()); // false
+```
+
+### isPrimitive
+
+是否是基本类型
+
+```js
+const isPrimitive = val => Object(val) !== val;
+```
+
+```js
+isPrimitive(null); // true
+isPrimitive(50); // true
+isPrimitive('Hello!'); // true
+isPrimitive(false); // true
+isPrimitive(Symbol()); // true
+isPrimitive([]); // false
+```
+
+### isPromiseLike
+
+是否看起来是 [`Promise`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
+
+```js
+const isPromiseLike = obj =>
+  obj !== null &&
+  (typeof obj === 'object' || typeof obj === 'function') &&
+  typeof obj.then === 'function'; // 有一个属性方法 then
+```
+
+```js
+isPromiseLike({
+  then: function() {
+    return '';
+  }
+}); // true
+isPromiseLike(null); // false
+isPromiseLike({}); // false
+```
+
+### isString
+
+检测基本类型字符串
+
+```js
+const isString = val => typeof val === 'string';
+```
+
+```js
+isString('10'); // true
+```
+
+### isSymbol
+
+是否是 `Symbol`
+
+```js
+const isSymbol = val => typeof val === 'symbol';
+```
+
+```js
+isSymbol(Symbol('x')); // true
+```
+
+### isUndefined
+
+是否是 `undefined`
+
+```js
+const isUndefined = val => val === undefined;
+```
+
+```js
+isUndefined(undefined); // true
+```
+
+### isValidJSON
+
+检查传入的字串是否是 `JSON` 格式的字串
+
+使用 `JSON.parse()` 和一个 `try... catch` 块
+
+```js
+const isValidJSON = str => {
+  try {
+    JSON.parse(str);
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
+```
+
+```js
+isValidJSON('{"name":"Adam","age":20}'); // true
+isValidJSON('{"name":"Adam",age:"20"}'); // false
+isValidJSON(null); // true
 ```
 
 </details>
@@ -2779,6 +3223,23 @@ Logs: {
   "id": 101
 }
 */
+```
+
+### isBrowser
+
+检测当前运行环境是否是浏览器，可以保证 `Node` 环境代码不会跑出错误
+
+检查全局的 `window` 和 `document`
+
+使用 `typeof` 避免抛出 `ReferenceError`.
+
+```js
+const isBrowser = () => ![typeof window, typeof document].includes('undefined');
+```
+
+```js
+isBrowser(); // true (browser)
+isBrowser(); // false (Node)
 ```
 
 </details>
