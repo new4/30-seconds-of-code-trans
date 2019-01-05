@@ -105,6 +105,45 @@ const fn = overArgs((x, y) => [x, y], [square, double]);
 fn(9, 3); // [81, 6]
 ```
 
+### pipeAsyncFunctions
+
+为异步函数执行从左到右的函数组合
+
+函数组合里的函数需要是一元的
+
+```js
+const pipeAsyncFunctions = (...fns) => arg => fns.reduce((p, f) => p.then(f), Promise.resolve(arg));
+```
+
+```js
+const sum = pipeAsyncFunctions(
+  x => x + 1,
+  x => new Promise(resolve => setTimeout(() => resolve(x + 2), 1000)),
+  x => x + 3,
+  async x => (await x) + 4
+);
+(async() => {
+  console.log(await sum(5)); // 15 (after one second)
+})();
+```
+
+### pipeFunctions
+
+执行从左到右的函数组合
+
+第一个函数可以接收多个参数，剩余的须是一元的
+
+```js
+const pipeFunctions = (...fns) => fns.reduce((f, g) => (...args) => g(f(...args)));
+```
+
+```js
+const add5 = x => x + 5;
+const multiply = (x, y) => x * y;
+const multiplyAndAdd5 = pipeFunctions(multiply, add5);
+multiplyAndAdd5(5, 2); // 15
+```
+
 </details>
 
 ## 📚 array
@@ -870,6 +909,51 @@ offset([1, 2, 3, 4, 5], 2); // [3, 4, 5, 1, 2]
 offset([1, 2, 3, 4, 5], -2); // [4, 5, 1, 2, 3]
 ```
 
+### partition
+
+根据分类函数来对数组元素分割成两部分
+
+```js
+const partition = (arr, fn) =>
+  arr.reduce(
+    (acc, val, i, arr) => {
+      acc[fn(val, i, arr) ? 0 : 1].push(val);
+      return acc;
+    },
+    [[], []]
+  );
+```
+
+```js
+const users = [{ user: 'barney', age: 36, active: false }, { user: 'fred', age: 40, active: true }];
+partition(users, o => o.active); // [[{ 'user': 'fred',    'age': 40, 'active': true }],[{ 'user': 'barney',  'age': 36, 'active': false }]]
+```
+
+### permutations
+
+⚠️ **WARNING**: 这个函数的复杂度是指数级增长的，太多数据（8~10）可能导致你的浏览器卡住
+
+生成排列组合（有重复）
+
+使用迭代
+
+```js
+const permutations = arr => {
+  if (arr.length <= 2) return arr.length === 2 ? [arr, [arr[1], arr[0]]] : arr;
+  return arr.reduce(
+    (acc, item, i) =>
+      acc.concat(
+        permutations([...arr.slice(0, i), ...arr.slice(i + 1)]).map(val => [item, ...val])
+      ),
+    []
+  );
+};
+```
+
+```js
+permutations([1, 33, 5]); // [ [ 1, 33, 5 ], [ 1, 5, 33 ], [ 33, 1, 5 ], [ 33, 5, 1 ], [ 5, 1, 33 ], [ 5, 33, 1 ] ]
+```
+
 </details>
 
 ## 🌐 browser
@@ -1386,6 +1470,25 @@ const onUserInputChange = callback => {
 onUserInputChange(type => {
   console.log('The user is now using', type, 'as an input method.');
 });
+```
+
+### prefix
+
+返回浏览器支持的 CSS 前缀
+
+```js
+const prefix = prop => {
+  const capitalizedProp = prop.charAt(0).toUpperCase() + prop.slice(1); // 驼峰
+  const prefixes = ['', 'webkit', 'moz', 'ms', 'o'];
+  const i = prefixes.findIndex(
+    prefix => typeof document.body.style[prefix ? prefix + capitalizedProp : prop] !== 'undefined'
+  );
+  return i !== -1 ? (i === 0 ? prop : prefixes[i] + capitalizedProp) : null;
+};
+```
+
+```js
+prefix('appearance'); // 'appearance' on a supported browser, otherwise 'webkitAppearance', 'mozAppearance', 'msAppearance' or 'oAppearance'
 ```
 
 </details>
@@ -2395,6 +2498,31 @@ minBy([{ n: 4 }, { n: 2 }, { n: 8 }, { n: 6 }], o => o.n); // 2
 minBy([{ n: 4 }, { n: 2 }, { n: 8 }, { n: 6 }], 'n'); // 2
 ```
 
+### percentile
+
+计算数组中不大于指定值的元素在所有元素中的占比
+
+```js
+const percentile = (arr, val) =>
+  (100 * arr.reduce((acc, v) => acc + (v < val ? 1 : 0) + (v === val ? 0.5 : 0), 0)) / arr.length;
+```
+
+```js
+percentile([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 6); // 55
+```
+
+### powerset
+
+返回数组的幂集，即原集合中所有的子集（包括全集和空集）构成的集族
+
+```js
+const powerset = arr => arr.reduce((a, v) => a.concat(a.map(r => [v].concat(r))), [[]]);
+```
+
+```js
+powerset([1, 2]); // [[], [1], [2], [2, 1]]
+```
+
 </details>
 
 ## 📦 node
@@ -3205,6 +3333,34 @@ orderBy(users, ['name', 'age'], ['asc', 'desc']); // [{name: 'barney', age: 36},
 orderBy(users, ['name', 'age']); // [{name: 'barney', age: 36}, {name: 'fred', age: 40}, {name: 'fred', age: 48}]
 ```
 
+### pick
+
+挑出指定的属性组成一个新对象
+
+```js
+const pick = (obj, arr) =>
+  arr.reduce((acc, curr) => (curr in obj && (acc[curr] = obj[curr]), acc), {});
+```
+
+```js
+pick({ a: 1, b: '2', c: 3 }, ['a', 'c']); // { 'a': 1, 'c': 3 }
+```
+
+### pickBy
+
+根据指定的方法挑出一些属性组成一个新对象
+
+```js
+const pickBy = (obj, fn) =>
+  Object.keys(obj)
+    .filter(k => fn(obj[k], k))
+    .reduce((acc, key) => ((acc[key] = obj[key]), acc), {});
+```
+
+```js
+pickBy({ a: 1, b: '2', c: 3 }, x => typeof x === 'number'); // { 'a': 1, 'c': 3 }
+```
+
 </details>
 
 ## 📜 string
@@ -3528,6 +3684,33 @@ const palindrome = str => {
 
 ```js
 palindrome('taco cat'); // true
+```
+
+### pluralize
+
+根据输入的数字选择性的返回单词的单数或复数，可以指定 `pliral` 的值（针对不仅仅在后面加上 `s` 来表示复数形式）
+
+```js
+const pluralize = (val, word, plural = word + 's') => {
+  const _pluralize = (num, word, plural = word + 's') =>
+    [1, -1].includes(Number(num)) ? word : plural;
+  if (typeof val === 'object') return (num, word) => _pluralize(num, word, val[word]);
+  return _pluralize(val, word, plural);
+};
+```
+
+```js
+pluralize(0, 'apple'); // 'apples'
+pluralize(1, 'apple'); // 'apple'
+pluralize(2, 'apple'); // 'apples'
+pluralize(2, 'person', 'people'); // 'people'
+
+const PLURALS = {
+  person: 'people',
+  radius: 'radii'
+};
+const autoPluralize = pluralize(PLURALS);
+autoPluralize(2, 'person'); // 'people'
 ```
 
 </details>
