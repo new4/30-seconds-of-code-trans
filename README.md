@@ -77,6 +77,34 @@ b = {};
 Object.assign(b, a); // == b
 ```
 
+### over
+
+根据一些函数创建一个新的函数，依次给原来的函数传入参数并返回结果数组
+
+```js
+const over = (...fns) => (...args) => fns.map(fn => fn.apply(null, args));
+```
+
+```js
+const minMax = over(Math.min, Math.max);
+minMax(1, 2, 3, 4, 5); // [1,5]
+```
+
+### overArgs
+
+创建一个新的函数，各个参数有各自的执行函数来生成新的参数供 `fn` 调用
+
+```js
+const overArgs = (fn, transforms) => (...args) => fn(...args.map((val, i) => transforms[i](val)));
+```
+
+```js
+const square = n => n * n;
+const double = n => n * 2;
+const fn = overArgs((x, y) => [x, y], [square, double]);
+fn(9, 3); // [81, 6]
+```
+
 </details>
 
 ## 📚 array
@@ -791,6 +819,57 @@ maxN([1, 2, 3]); // [3]
 maxN([1, 2, 3], 2); // [3,2]
 ```
 
+### minN
+
+给定数组的最小的 `n` 个值
+
+```js
+const minN = (arr, n = 1) => [...arr].sort((a, b) => a - b).slice(0, n);
+```
+```js
+minN([1, 2, 3]); // [1]
+minN([1, 2, 3], 2); // [1,2]
+```
+
+### none
+
+若预测函数返回 `false`, 则返回 `true`
+
+```js
+const none = (arr, fn = Boolean) => !arr.some(fn);
+```
+
+```js
+none([0, 1, 3, 0], x => x == 2); // true
+none([0, 0, 0]); // true
+```
+
+### nthElement
+
+获取数组的第 `n` 处的元素
+
+```js
+const nthElement = (arr, n = 0) => (n === -1 ? arr.slice(n) : arr.slice(n, n + 1))[0];
+```
+
+```js
+nthElement(['a', 'b', 'c'], 1); // 'b'
+nthElement(['a', 'b', 'b'], -3); // 'a'
+```
+
+### offset
+
+移动数组首部指定偏移量 `offset` 内的元素到尾部（`offset` 可以设置为负值，将尾部元素移动到数组首部）
+
+```js
+const offset = (arr, offset) => [...arr.slice(offset), ...arr.slice(0, offset)];
+```
+
+```js
+offset([1, 2, 3, 4, 5], 2); // [3, 4, 5, 1, 2]
+offset([1, 2, 3, 4, 5], -2); // [4, 5, 1, 2, 3]
+```
+
 </details>
 
 ## 🌐 browser
@@ -1209,6 +1288,106 @@ const isBrowserTabFocused = () => !document.hidden;
 isBrowserTabFocused(); // true
 ```
 
+### nodeListToArray
+
+将 `NodeList` 转化为数组
+
+```js
+const nodeListToArray = nodeList => [...nodeList];
+```
+
+```js
+nodeListToArray(document.childNodes); // [ <!DOCTYPE html>, html ]
+```
+
+### observeMutations
+
+返回一个新的 [`MutationObserver`](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver)
+
+```js
+const observeMutations = (element, callback, options) => {
+  const observer = new MutationObserver(mutations => mutations.forEach(m => callback(m)));
+  observer.observe(
+    element,
+    Object.assign(
+      {
+        childList: true,
+        attributes: true,
+        attributeOldValue: true,
+        characterData: true,
+        characterDataOldValue: true,
+        subtree: true
+      },
+      options
+    )
+  );
+  return observer;
+};
+```
+
+```js
+const obs = observeMutations(document, console.log); // Logs all mutations that happen on the page
+obs.disconnect(); // Disconnects the observer and stops logging mutations on the page
+```
+
+### off
+
+移除某个对象上的所有事件
+
+```js
+const off = (el, evt, fn, opts = false) => el.removeEventListener(evt, fn, opts);
+```
+
+```js
+const fn = () => console.log('!');
+document.body.addEventListener('click', fn);
+off(document.body, 'click', fn); // no longer logs '!' upon clicking on the page
+```
+
+### on
+
+给某个元素提供事件委托功能的能力
+
+```js
+const on = (el, evt, fn, opts = {}) => {
+  const delegatorFn = e => e.target.matches(opts.target) && fn.call(e.target, e);
+  el.addEventListener(evt, opts.target ? delegatorFn : fn, opts.options || false);
+  if (opts.target) return delegatorFn;
+};
+```
+
+```js
+const fn = () => console.log('!');
+on(document.body, 'click', fn); // logs '!' upon clicking the body
+on(document.body, 'click', fn, { target: 'p' }); // logs '!' upon clicking a `p` element child of the body
+on(document.body, 'click', fn, { options: true }); // use capturing instead of bubbling
+```
+
+### onUserInputChange
+
+```js
+const onUserInputChange = callback => {
+  let type = 'mouse',
+    lastTime = 0;
+  const mousemoveHandler = () => {
+    const now = performance.now();
+    if (now - lastTime < 20)
+      (type = 'mouse'), callback(type), document.removeEventListener('mousemove', mousemoveHandler);
+    lastTime = now;
+  };
+  document.addEventListener('touchstart', () => {
+    if (type === 'touch') return;
+    (type = 'touch'), callback(type), document.addEventListener('mousemove', mousemoveHandler);
+  });
+};
+```
+
+```js
+onUserInputChange(type => {
+  console.log('The user is now using', type, 'as an input method.');
+});
+```
+
 </details>
 
 ## ⏱️ date
@@ -1361,6 +1540,24 @@ const array = [
   new Date(2016, 0, 9)
 ];
 maxDate(array); // 2018-03-11T22:00:00.000Z
+```
+
+### minDate
+
+返回给定日期值中的最小值
+
+```js
+const minDate = (...dates) => new Date(Math.min.apply(null, ...dates));
+```
+
+```js
+const array = [
+  new Date(2017, 4, 13),
+  new Date(2018, 2, 12),
+  new Date(2016, 0, 10),
+  new Date(2016, 0, 9)
+];
+minDate(array); // 2016-01-08T22:00:00.000Z
 ```
 
 </details>
@@ -1690,6 +1887,68 @@ const anagramsCached = memoize(anagrams);
 anagramsCached('javascript'); // takes a long time
 anagramsCached('javascript'); // returns virtually instantly since it's now cached
 console.log(anagramsCached.cache); // The cached anagrams map
+```
+
+### negate
+
+函数的返回值取非
+
+```js
+const negate = func => (...args) => !func(...args);
+```
+
+```js
+[1, 2, 3, 4, 5, 6].filter(negate(n => n % 2 === 0)); // [ 1, 3, 5 ]
+```
+
+### once
+
+保证一个函数只被调用一次
+
+```js
+const once = fn => {
+  let called = false;
+  return function(...args) {
+    if (called) return;
+    called = true;
+    return fn.apply(this, args); // 注意 this
+  };
+};
+```
+
+```js
+const startApp = function(event) {
+  console.log(this, event); // document.body, MouseEvent
+};
+document.body.addEventListener('click', once(startApp)); // only runs `startApp` once upon click
+```
+
+### partial
+
+把参数加入到 `fn` 接受的参数前面去
+
+```js
+const partial = (fn, ...partials) => (...args) => fn(...partials, ...args);
+```
+
+```js
+const greet = (greeting, name) => greeting + ' ' + name + '!';
+const greetHello = partial(greet, 'Hello');
+greetHello('John'); // 'Hello John!'
+```
+
+### partialRight
+
+把参数加入到 `fn` 接受的参数后面去
+
+```js
+const partialRight = (fn, ...partials) => (...args) => fn(...args, ...partials);
+```
+
+```js
+const greet = (greeting, name) => greeting + ' ' + name + '!';
+const greetJohn = partialRight(greet, 'John');
+greetJohn('Hello'); // 'Hello John!'
 ```
 
 </details>
@@ -2106,6 +2365,34 @@ const median = arr => {
 
 ```js
 median([5, 6, 50, 1, -5]); // 5
+```
+
+### midpoint
+
+两点连线的中点坐标
+
+```js
+const midpoint = ([x1, y1], [x2, y2]) => [(x1 + x2) / 2, (y1 + y2) / 2];
+```
+
+```js
+midpoint([2, 2], [4, 4]); // [3, 3]
+midpoint([4, 4], [6, 6]); // [5, 5]
+midpoint([1, 3], [2, 4]); // [1.5, 3.5]
+```
+
+
+### minBy
+
+将数组元素的映射结果的最小值返回
+
+```js
+const minBy = (arr, fn) => Math.min(...arr.map(typeof fn === 'function' ? fn : val => val[fn]));
+```
+
+```js
+minBy([{ n: 4 }, { n: 2 }, { n: 8 }, { n: 6 }], o => o.n); // 2
+minBy([{ n: 4 }, { n: 2 }, { n: 8 }, { n: 6 }], 'n'); // 2
 ```
 
 </details>
@@ -2783,6 +3070,141 @@ matchesWith(
 ); // true
 ```
 
+### merge
+
+合并多个对象
+
+相同键名会把基本类型的值合并到数组里去
+
+```js
+const merge = (...objs) =>
+  [...objs].reduce(
+    (acc, obj) =>
+      Object.keys(obj).reduce((a, k) => {
+        acc[k] = acc.hasOwnProperty(k) ? [].concat(acc[k]).concat(obj[k]) : obj[k];
+        return acc;
+      }, {}),
+    {}
+  );
+```
+
+```js
+const object = {
+  a: [{ x: 2 }, { y: 4 }],
+  b: 1
+};
+const other = {
+  a: { z: 3 },
+  b: [2, 3],
+  c: 'foo'
+};
+merge(object, other); // { a: [ { x: 2 }, { y: 4 }, { z: 3 } ], b: [ 1, 2, 3 ], c: 'foo' }
+```
+
+### nest
+
+给定一个扁平的对象数组，里面的所有的对象都是有从属关系的，找出这种关系并构建嵌套对象
+
+使用迭代
+
+从根开始，一层层过滤下去
+
+```js
+const nest = (items, id = null, link = 'parent_id') =>
+  items
+    .filter(item => item[link] === id) // 找到根
+    .map(item => ({ ...item, children: nest(items, item.id) }));
+```
+
+```js
+// One top level comment
+const comments = [
+  { id: 1, parent_id: null },
+  { id: 2, parent_id: 1 },
+  { id: 3, parent_id: 1 },
+  { id: 4, parent_id: 2 },
+  { id: 5, parent_id: 4 }
+];
+const nestedComments = nest(comments); // [{ id: 1, parent_id: null, children: [...] }]
+```
+
+### objectFromPairs
+
+根据给定的键值对创建一个对象
+
+```js
+const objectFromPairs = arr => arr.reduce((a, [key, val]) => ((a[key] = val), a), {});
+```
+
+```js
+objectFromPairs([['a', 1], ['b', 2]]); // {a: 1, b: 2}
+```
+
+### objectToPairs
+
+根据对象创建一个键值对数组
+
+```js
+const objectToPairs = obj => Object.keys(obj).map(k => [k, obj[k]]);
+```
+
+```js
+objectToPairs({ a: 1, b: 2 }); // [ ['a', 1], ['b', 2] ]
+```
+
+### omit
+
+返回除指定属性之外的属性组成的对象
+
+```js
+const omit = (obj, arr) =>
+  Object.keys(obj)
+    .filter(k => !arr.includes(k)) // 过滤出不在 arr 中列出的属性
+    .reduce((acc, key) => ((acc[key] = obj[key]), acc), {}); // 利用这些属性创建个新对象
+```
+
+```js
+omit({ a: 1, b: '2', c: 3 }, ['b']); // { 'a': 1, 'c': 3 }
+```
+
+### omitBy
+
+返回除指定执行结果之外的属性组成的对象
+
+```js
+const omitBy = (obj, fn) =>
+  Object.keys(obj)
+    .filter(k => !fn(obj[k], k))
+    .reduce((acc, key) => ((acc[key] = obj[key]), acc), {});
+```
+
+```js
+omitBy({ a: 1, b: '2', c: 3 }, x => typeof x === 'number'); // { b: '2' }
+```
+
+### orderBy
+
+将对象数组按照指定属性优先级排序，可以指定各个属性的排序是升序还是降序
+
+```js
+const orderBy = (arr, props, orders) =>
+  [...arr].sort((a, b) =>
+    props.reduce((acc, prop, i) => {
+      if (acc === 0) {
+        const [p1, p2] = orders && orders[i] === 'desc' ? [b[prop], a[prop]] : [a[prop], b[prop]];
+        acc = p1 > p2 ? 1 : p1 < p2 ? -1 : 0;
+      }
+      return acc;
+    }, 0)
+  );
+```
+
+```js
+const users = [{ name: 'fred', age: 48 }, { name: 'barney', age: 36 }, { name: 'fred', age: 40 }];
+orderBy(users, ['name', 'age'], ['asc', 'desc']); // [{name: 'barney', age: 36}, {name: 'fred', age: 48}, {name: 'fred', age: 40}]
+orderBy(users, ['name', 'age']); // [{name: 'barney', age: 36}, {name: 'fred', age: 40}, {name: 'fred', age: 48}]
+```
+
 </details>
 
 ## 📜 string
@@ -3072,6 +3494,40 @@ const mask = (cc, num = 4, mask = '*') => `${cc}`.slice(-num).padStart(`${cc}`.l
 mask(1234567890); // '******7890'
 mask(1234567890, 3); // '*******890'
 mask(1234567890, -4, '$'); // '$$$$567890'
+```
+
+### pad
+
+在指定字符串两边补全特殊的字符
+
+使用 `String.padStart()` 和 `String.padEnd()`
+
+```js
+const pad = (str, length, char = ' ') =>
+  str.padStart((str.length + length) / 2, char).padEnd(length, char);
+```
+
+```js
+pad('cat', 8); // '  cat   '
+pad(String(42), 6, '0'); // '004200'
+pad('foobar', 3); // 'foobar'
+```
+
+### palindrome
+
+回文结构
+
+不区分大小写，不关注特殊字符
+
+```js
+const palindrome = str => {
+  const s = str.toLowerCase().replace(/[\W_]/g, '');
+  return s === [...s].reverse().join('');
+};
+```
+
+```js
+palindrome('taco cat'); // true
 ```
 
 </details>
@@ -3592,6 +4048,69 @@ const isBrowser = () => ![typeof window, typeof document].includes('undefined');
 ```js
 isBrowser(); // true (browser)
 isBrowser(); // false (Node)
+```
+
+### mostPerformant
+
+返回函数数组中执行性能最佳的那个的下标
+
+```js
+const mostPerformant = (fns, iterations = 10000) => {
+  const times = fns.map(fn => {
+    const before = performance.now();
+    for (let i = 0; i < iterations; i++) fn();
+    return performance.now() - before;
+  });
+  return times.indexOf(Math.min(...times));
+};
+```
+
+```js
+mostPerformant([
+  () => {
+    // Loops through the entire array before returning `false`
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, '10'].every(el => typeof el === 'number');
+  },
+  () => {
+    // Only needs to reach index `1` before returning false
+    [1, '2', 3, 4, 5, 6, 7, 8, 9, 10].every(el => typeof el === 'number');
+  }
+]); // 1
+```
+
+### nthArg
+
+获取函数的第 `n` 处参数
+
+```js
+const nthArg = n => (...args) => args.slice(n)[0];
+```
+
+```js
+const third = nthArg(2);
+third(1, 2, 3); // 3
+third(1, 2); // undefined
+const last = nthArg(-1);
+last(1, 2, 3, 4, 5); // 5
+```
+
+### parseCookie
+
+解析 HTTP Cookie 头并返回键值对
+
+```js
+const parseCookie = str =>
+  str
+    .split(';')
+    .map(v => v.split('='))
+    .reduce((acc, v) => {
+      acc[decodeURIComponent(v[0].trim())] = decodeURIComponent(v[1].trim());
+      return acc;
+    }, {});
+```
+
+```js
+parseCookie('foo=bar; equation=E%3Dmc%5E2'); // { foo: 'bar', equation: 'E=mc^2' }
 ```
 
 </details>
