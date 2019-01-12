@@ -144,6 +144,24 @@ const multiplyAndAdd5 = pipeFunctions(multiply, add5);
 multiplyAndAdd5(5, 2); // 15
 ```
 
+### promisify
+
+将异步函数转换成返回 `Promise` 的函数
+
+*在 Node 8+, 可以使用 [`util.promisify`](https://nodejs.org/api/util.html#util_util_promisify_original)*
+
+```js
+const promisify = func => (...args) =>
+  new Promise((resolve, reject) =>
+    func(...args, (err, result) => (err ? reject(err) : resolve(result)))
+  );
+```
+
+```js
+const delay = promisify((d, cb) => setTimeout(cb, d));
+delay(2000).then(() => console.log('Hi!')); // // Promise resolves after 2s
+```
+
 </details>
 
 ## 📚 array
@@ -952,6 +970,88 @@ const permutations = arr => {
 
 ```js
 permutations([1, 33, 5]); // [ [ 1, 33, 5 ], [ 1, 5, 33 ], [ 33, 1, 5 ], [ 33, 5, 1 ], [ 5, 1, 33 ], [ 5, 33, 1 ] ]
+```
+
+### pull
+
+将过滤掉数组中指定的项之后剩下的元素返回
+
+_(不改变原数组的话可以看 [`without`](#without))_
+
+```js
+const pull = (arr, ...args) => {
+  let argState = Array.isArray(args[0]) ? args[0] : args;
+  let pulled = arr.filter((v, i) => !argState.includes(v));
+  arr.length = 0;
+  pulled.forEach(v => arr.push(v));
+};
+```
+
+```js
+let myArray = ['a', 'b', 'c', 'a', 'b', 'c'];
+pull(myArray, 'a', 'c'); // myArray = [ 'b', 'b' ]
+```
+
+### pullAtIndex
+
+将过滤掉数组中指定下标的项
+
+```js
+const pullAtIndex = (arr, pullArr) => {
+  let removed = [];
+  let pulled = arr
+    .map((v, i) => (pullArr.includes(i) ? removed.push(v) : v))
+    .filter((v, i) => !pullArr.includes(i));
+  arr.length = 0;
+  pulled.forEach(v => arr.push(v));
+  return removed;
+};
+```
+
+```js
+let myArray = ['a', 'b', 'c', 'd'];
+let pulled = pullAtIndex(myArray, [1, 3]); // myArray = [ 'a', 'c' ] , pulled = [ 'b', 'd' ]
+```
+
+### pullAtValue
+
+将过滤掉数组中指定值的项
+
+```js
+const pullAtValue = (arr, pullArr) => {
+  let removed = [],
+    pushToRemove = arr.forEach((v, i) => (pullArr.includes(v) ? removed.push(v) : v)),
+    mutateTo = arr.filter((v, i) => !pullArr.includes(v));
+  arr.length = 0;
+  mutateTo.forEach(v => arr.push(v));
+  return removed;
+};
+```
+
+```js
+let myArray = ['a', 'b', 'c', 'd'];
+let pulled = pullAtValue(myArray, ['b', 'd']); // myArray = [ 'a', 'c' ] , pulled = [ 'b', 'd' ]
+```
+
+### pullBy
+
+根据迭代函数来进行 `pull` 操作
+
+```js
+const pullBy = (arr, ...args) => {
+  const length = args.length;
+  let fn = length > 1 ? args[length - 1] : undefined;
+  fn = typeof fn == 'function' ? (args.pop(), fn) : undefined;
+  let argState = (Array.isArray(args[0]) ? args[0] : args).map(val => fn(val));
+  let pulled = arr.filter((v, i) => !argState.includes(fn(v)));
+  arr.length = 0;
+  pulled.forEach(v => arr.push(v));
+};
+```
+
+```js
+var myArray = [{ x: 1 }, { x: 2 }, { x: 3 }, { x: 1 }];
+pullBy(myArray, [{ x: 1 }, { x: 3 }], o => o.x); // myArray = [{ x: 2 }]
 ```
 
 </details>
@@ -2521,6 +2621,51 @@ const powerset = arr => arr.reduce((a, v) => a.concat(a.map(r => [v].concat(r)))
 
 ```js
 powerset([1, 2]); // [[], [1], [2], [2, 1]]
+```
+
+### primes
+
+根据埃拉托斯特尼筛法生成素数数组
+
+```js
+const primes = num => {
+  let arr = Array.from({ length: num - 1 }).map((x, i) => i + 2), // 从 2 到当前 num 的数组
+    sqroot = Math.floor(Math.sqrt(num)), // 遍历到 √num
+    numsTillSqroot = Array.from({ length: sqroot - 1 }).map((x, i) => i + 2);
+  numsTillSqroot.forEach(x => (arr = arr.filter(y => y % x !== 0 || y === x)));
+  return arr;
+};
+```
+
+```js
+primes(10); // [2,3,5,7]
+```
+
+### radsToDegrees
+
+弧度 => 角度
+
+使用 `Math.PI`
+
+```js
+const radsToDegrees = rad => (rad * 180.0) / Math.PI;
+```
+
+```js
+radsToDegrees(Math.PI / 2); // 90
+```
+
+### randomIntArrayInRange
+
+生成 `[min, max]` 区间内的 `n` 个数
+
+```js
+const randomIntArrayInRange = (min, max, n = 1) =>
+  Array.from({ length: n }, () => Math.floor(Math.random() * (max - min + 1)) + min);
+```
+
+```js
+randomIntArrayInRange(12, 35, 10); // [ 34, 14, 27, 17, 30, 27, 20, 26, 21, 14 ]
 ```
 
 </details>
@@ -4294,6 +4439,43 @@ const parseCookie = str =>
 
 ```js
 parseCookie('foo=bar; equation=E%3Dmc%5E2'); // { foo: 'bar', equation: 'E=mc^2' }
+```
+
+### prettyBytes
+
+将字节数字转换成带单位的字串
+
+使用 `Number.toPrecision()` 设置精度
+
+```js
+const prettyBytes = (num, precision = 3, addSpace = true) => {
+  const UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+  if (Math.abs(num) < 1) return num + (addSpace ? ' ' : '') + UNITS[0];
+  const exponent = Math.min(Math.floor(Math.log10(num < 0 ? -num : num) / 3), UNITS.length - 1);
+  const n = Number(((num < 0 ? -num : num) / 1000 ** exponent).toPrecision(precision));
+  return (num < 0 ? '-' : '') + n + (addSpace ? ' ' : '') + UNITS[exponent];
+};
+```
+
+```js
+prettyBytes(1000); // "1 KB"
+prettyBytes(-27145424323.5821, 5); // "-27.145 GB"
+prettyBytes(123456789, 3, false); // "123MB"
+```
+
+### randomHexColorCode
+
+随机生成一个十六进制表示的颜色字串
+
+```js
+const randomHexColorCode = () => {
+  let n = (Math.random() * 0xfffff * 1000000).toString(16);
+  return '#' + n.slice(0, 6);
+};
+```
+
+```js
+randomHexColorCode(); // "#e34155"
 ```
 
 </details>
