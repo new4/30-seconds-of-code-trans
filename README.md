@@ -162,6 +162,24 @@ const delay = promisify((d, cb) => setTimeout(cb, d));
 delay(2000).then(() => console.log('Hi!')); // // Promise resolves after 2s
 ```
 
+### rearg
+
+重排调用参数
+
+```js
+const rearg = (fn, indexes) => (...args) => fn(...indexes.map(i => args[i]));
+```
+
+```js
+var rearged = rearg(
+  function(a, b, c) {
+    return [a, b, c];
+  },
+  [2, 0, 1]
+);
+rearged('b', 'c', 'a'); // ['a', 'b', 'c']
+```
+
 </details>
 
 ## 📚 array
@@ -1054,6 +1072,81 @@ var myArray = [{ x: 1 }, { x: 2 }, { x: 3 }, { x: 1 }];
 pullBy(myArray, [{ x: 1 }, { x: 3 }], o => o.x); // myArray = [{ x: 2 }]
 ```
 
+### reducedFilter
+
+过滤满足函数 `fn` 的条目，只返回指定的键值 `keys`
+
+```js
+const reducedFilter = (data, keys, fn) =>
+  data.filter(fn).map(el =>
+    keys.reduce((acc, key) => {
+      acc[key] = el[key];
+      return acc;
+    }, {})
+  );
+```
+
+```js
+const data = [
+  {
+    id: 1,
+    name: 'john',
+    age: 24
+  },
+  {
+    id: 2,
+    name: 'mike',
+    age: 50
+  }
+];
+
+reducedFilter(data, ['id', 'name'], item => item.age > 24); // [{ id: 2, name: 'mike'}]
+```
+
+### reduceSuccessive
+
+对累加器和数组中的每个元素（从左到右）应用函数，返回累加值组成的数组
+
+```js
+const reduceSuccessive = (arr, fn, acc) =>
+  arr.reduce((res, val, i, arr) => (res.push(fn(res.slice(-1)[0], val, i, arr)), res), [acc]);
+```
+
+```js
+reduceSuccessive([1, 2, 3, 4, 5, 6], (acc, val) => acc + val, 0); // [0, 1, 3, 6, 10, 15, 21]
+```
+
+### reduceWhich
+
+根据设置的比较函数返回数组中的最大/最小值
+
+```js
+const reduceWhich = (arr, comparator = (a, b) => a - b) =>
+  arr.reduce((a, b) => (comparator(a, b) >= 0 ? b : a));
+```
+
+```js
+reduceWhich([1, 3, 2]); // 1
+reduceWhich([1, 3, 2], (a, b) => b - a); // 3
+reduceWhich(
+  [{ name: 'Tom', age: 12 }, { name: 'Jack', age: 18 }, { name: 'Lucy', age: 9 }],
+  (a, b) => a.age - b.age
+); // {name: "Lucy", age: 9}
+```
+
+### reject
+
+其实就是按照规则过滤数组
+
+```js
+const reject = (pred, array) => array.filter((...args) => !pred(...args));
+```
+
+```js
+reject(x => x % 2 === 0, [1, 2, 3, 4, 5]); // [1, 3, 5]
+reject(word => word.length > 4, ['Apple', 'Pear', 'Kiwi', 'Banana']); // ['Pear', 'Kiwi']
+```
+
 </details>
 
 ## 🌐 browser
@@ -1589,6 +1682,58 @@ const prefix = prop => {
 
 ```js
 prefix('appearance'); // 'appearance' on a supported browser, otherwise 'webkitAppearance', 'mozAppearance', 'msAppearance' or 'oAppearance'
+```
+
+### recordAnimationFrames
+
+在每帧动画调用指定回调函数
+
+使用迭代
+
+```js
+const recordAnimationFrames = (callback, autoStart = true) => {
+  let running = true,
+    raf;
+  const stop = () => {
+    running = false;
+    cancelAnimationFrame(raf);
+  };
+  const start = () => {
+    running = true;
+    run();
+  };
+  const run = () => {
+    raf = requestAnimationFrame(() => {
+      callback();
+      if (running) run();
+    });
+  };
+  if (autoStart) start();
+  return { start, stop };
+};
+```
+
+```js
+const cb = () => console.log('Animation frame fired');
+const recorder = recordAnimationFrames(cb); // logs 'Animation frame fired' on each animation frame
+recorder.stop(); // stops logging
+recorder.start(); // starts again
+const recorder2 = recordAnimationFrames(cb, false); // `start` needs to be explicitly called to begin recording frames
+```
+
+### redirect
+
+重定向到指定的 `URL`
+
+第二个参数模仿点击(`true`)或者是一个 `HTTP`重定向(`false`).
+
+```js
+const redirect = (url, asLink = true) =>
+  asLink ? (window.location.href = url) : window.location.replace(url);
+```
+
+```js
+redirect('https://google.com');
 ```
 
 </details>
@@ -2668,6 +2813,30 @@ const randomIntArrayInRange = (min, max, n = 1) =>
 randomIntArrayInRange(12, 35, 10); // [ 34, 14, 27, 17, 30, 27, 20, 26, 21, 14 ]
 ```
 
+### randomIntegerInRange
+
+生成 `[min, max]` 区间内的随机**整数**
+
+```js
+const randomIntegerInRange = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+```
+
+```js
+randomIntegerInRange(0, 5); // 2
+```
+
+### randomNumberInRange
+
+生成 `[min, max]` 区间内的随机数
+
+```js
+const randomNumberInRange = (min, max) => Math.random() * (max - min) + min;
+```
+
+```js
+randomNumberInRange(2, 10); // 6.0211363285087005
+```
+
 </details>
 
 ## 📦 node
@@ -2881,6 +3050,35 @@ const JSONToFile = (obj, filename) =>
 
 ```js
 JSONToFile({ test: 'is passed' }, 'testJsonFile'); // writes the object to 'testJsonFile.json'
+```
+
+### readFileLines
+
+返回文件内容按行划分的数组
+
+使用 `readFileSync` 创建 `Buffer`
+
+使用 `toString(encoding)` 将 `Buffer` 转成字串
+
+```js
+const fs = require('fs');
+const readFileLines = filename =>
+  fs
+    .readFileSync(filename)
+    .toString('UTF8')
+    .split('\n');
+```
+
+```js
+/*
+contents of test.txt :
+  line1
+  line2
+  line3
+  ___________________________
+*/
+let arr = readFileLines('test.txt');
+console.log(arr); // ['line1', 'line2', 'line3']
 ```
 
 </details>
