@@ -180,6 +180,19 @@ var rearged = rearg(
 rearged('b', 'c', 'a'); // ['a', 'b', 'c']
 ```
 
+### spreadOver
+
+采用可变参数函数并返回一个闭包，该闭包接受一个参数数组以映射到函数的输入
+
+```js
+const spreadOver = fn => argsArr => fn(...argsArr);
+```
+
+```js
+const arrayMax = spreadOver(Math.max);
+arrayMax([1, 2, 3]); // 3
+```
+
 </details>
 
 ## 📚 array
@@ -1199,6 +1212,148 @@ sampleSize([1, 2, 3], 2); // [3,1]
 sampleSize([1, 2, 3], 4); // [2,3,1]
 ```
 
+### shank
+
+功能类似 [`Array.prototype.splice()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice), 但是不改变原来的数组而是返回一个新的数组
+
+```js
+const shank = (arr, index = 0, delCount = 0, ...elements) =>
+  arr
+    .slice(0, index)
+    .concat(elements)
+    .concat(arr.slice(index + delCount));
+```
+
+```js
+const names = ['alpha', 'bravo', 'charlie'];
+const namesAndDelta = shank(names, 1, 0, 'delta'); // [ 'alpha', 'delta', 'bravo', 'charlie' ]
+const namesNoBravo = shank(names, 1, 1); // [ 'alpha', 'charlie' ]
+console.log(names); // ['alpha', 'bravo', 'charlie']
+```
+
+### shuffle
+
+洗牌算法 [Fisher-Yates algorithm](https://github.com/30-seconds/30-seconds-of-code#shuffle)
+
+```js
+const shuffle = ([...arr]) => {
+  let m = arr.length;
+  while (m) {
+    const i = Math.floor(Math.random() * m--);
+    [arr[m], arr[i]] = [arr[i], arr[m]];
+  }
+  return arr;
+};
+```
+
+```js
+const foo = [1, 2, 3];
+shuffle(foo); // [2, 3, 1], foo = [1, 2, 3]
+```
+
+### similarity
+
+交集
+
+```js
+const similarity = (arr, values) => arr.filter(v => values.includes(v));
+```
+
+```js
+similarity([1, 2, 3], [1, 2, 4]); // [1, 2]
+```
+
+### sortedIndex
+
+为了确保数组排序，返回新值应该插入的下标
+
+使用 `Array.prototype.findIndex()`
+
+```js
+const sortedIndex = (arr, n) => {
+  const isDescending = arr[0] > arr[arr.length - 1];
+  const index = arr.findIndex(el => (isDescending ? n >= el : n <= el));
+  return index === -1 ? arr.length : index;
+};
+```
+
+```js
+sortedIndex([5, 3, 2, 1], 4); // 1
+sortedIndex([30, 50], 40); // 1
+```
+
+### sortedIndexBy
+
+为了确保数组排序（按照 `fn` 的规则），返回新值应该插入的下标
+
+```js
+const sortedIndexBy = (arr, n, fn) => {
+  const isDescending = fn(arr[0]) > fn(arr[arr.length - 1]);
+  const val = fn(n);
+  const index = arr.findIndex(el => (isDescending ? val >= fn(el) : val <= fn(el)));
+  return index === -1 ? arr.length : index;
+};
+```
+
+```js
+sortedIndexBy([{ x: 4 }, { x: 5 }], { x: 4 }, o => o.x); // 0
+```
+
+### sortedLastIndex
+
+为了确保数组排序，返回新值应该插入的下标（靠后的）
+
+```js
+const sortedLastIndex = (arr, n) => {
+  const isDescending = arr[0] > arr[arr.length - 1];
+  const index = arr.reverse().findIndex(el => (isDescending ? n <= el : n >= el));
+  return index === -1 ? 0 : arr.length - index;
+};
+```
+
+```js
+sortedLastIndex([10, 20, 30, 30, 40], 30); // 4
+```
+
+### sortedLastIndexBy
+
+为了确保数组排序（按照 `fn` 的规则），返回新值应该插入的下标（靠后的）
+
+```js
+const sortedLastIndexBy = (arr, n, fn) => {
+  const isDescending = fn(arr[0]) > fn(arr[arr.length - 1]);
+  const val = fn(n);
+  const index = arr
+    .map(fn)
+    .reverse()
+    .findIndex(el => (isDescending ? val <= el : val >= el));
+  return index === -1 ? 0 : arr.length - index;
+};
+```
+
+```js
+sortedLastIndexBy([{ x: 4 }, { x: 5 }], { x: 4 }, o => o.x); // 1
+```
+
+### stableSort
+
+执行数组的稳定排序，在值相同时保留项的初始索引
+
+不改变原始数组，而是返回一个新数组
+
+```js
+const stableSort = (arr, compare) =>
+  arr
+    .map((item, index) => ({ item, index }))
+    .sort((a, b) => compare(a.item, b.item) || a.index - b.index)
+    .map(({ item }) => item);
+```
+
+```js
+const arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const stable = stableSort(arr, () => 0); // [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+```
+
 </details>
 
 ## 🌐 browser
@@ -1829,6 +1984,72 @@ let outsideVariable = 50;
 runAsync(() => typeof outsideVariable).then(console.log); // 'undefined'
 ```
 
+### scrollToTop
+
+平稳地滚动到页面的顶部
+
+使用 `document.documentElement.scrollTop` 或 `document.body.scrollTop` 获取到页面顶部的距离
+
+使用 `window.requestAnimationFrame()` 执行滚动动画
+
+```js
+const scrollToTop = () => {
+  const c = document.documentElement.scrollTop || document.body.scrollTop;
+  if (c > 0) {
+    window.requestAnimationFrame(scrollToTop);
+    window.scrollTo(0, c - c / 8);
+  }
+};
+```
+
+```js
+scrollToTop();
+```
+
+### setStyle
+
+设置 `CSS` 样式
+
+```js
+const setStyle = (el, ruleName, val) => (el.style[ruleName] = val);
+```
+
+```js
+setStyle(document.querySelector('p'), 'font-size', '20px'); // The first <p> element on the page will have a font-size of 20px
+```
+
+### show
+
+显示所有指定的元素
+
+```js
+const show = (...el) => [...el].forEach(e => (e.style.display = ''));
+```
+
+```js
+show(...document.querySelectorAll('img')); // Shows all <img> elements on the page
+```
+
+### smoothScroll
+
+将元素平滑地滚动到可视区域
+
+使用 `.scrollIntoView` 方法
+
+传入 `{ behavior: 'smooth' }`
+
+```js
+const smoothScroll = element =>
+  document.querySelector(element).scrollIntoView({
+    behavior: 'smooth'
+  });
+```
+
+```js
+smoothScroll('#fooBar'); // scrolls smoothly to the element with the id fooBar
+smoothScroll('.fooBar'); // scrolls smoothly to the first element with a class of fooBar
+```
+
 </details>
 
 ## ⏱️ date
@@ -2405,6 +2626,24 @@ const delay = d => new Promise(r => setTimeout(r, d));
 runPromisesInSeries([() => delay(1000), () => delay(2000)]); // Executes each promise sequentially, taking a total of 3 seconds to complete
 ```
 
+### sleep
+
+延迟执行异步函数
+
+其实就是将其放入 `setTimeout` 中，再在外面裹上一层 `Promise`
+
+```js
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+```
+
+```js
+async function sleepyWork() {
+  console.log("I'm going to sleep for 1 second.");
+  await sleep(1000);
+  console.log('I woke up after 1 second.');
+}
+```
+
 </details>
 
 ## ➗ math
@@ -2953,6 +3192,25 @@ const round = (n, decimals = 0) => Number(`${Math.round(`${n}e${decimals}`)}e-${
 
 ```js
 round(1.005, 2); // 1.01
+```
+
+### sdbm
+
+将输入的字串哈希
+
+```js
+const sdbm = str => {
+  let arr = str.split('');
+  return arr.reduce(
+    (hashCode, currentVal) =>
+      (hashCode = currentVal.charCodeAt(0) + (hashCode << 6) + (hashCode << 16) - hashCode),
+    0
+  );
+};
+```
+
+```js
+sdbm('name'); // -3521204949
 ```
 
 </details>
@@ -3842,6 +4100,42 @@ const obj = { name: 'Bobo', job: 'Front-End Master', shoeSize: 100 };
 renameKeys({ name: 'firstName', job: 'passion' }, obj); // { firstName: 'Bobo', passion: 'Front-End Master', shoeSize: 100 }
 ```
 
+### shallowClone
+
+浅复制
+
+使用 `Object.assign()`
+
+```js
+const shallowClone = obj => Object.assign({}, obj);
+```
+
+```js
+const a = { x: true, y: 1 };
+const b = shallowClone(a); // a !== b
+```
+
+### size
+
+获取数组，对象和字串的长度
+
+```js
+const size = val =>
+  Array.isArray(val)
+    ? val.length
+    : val && typeof val === 'object'
+      ? val.size || val.length || Object.keys(val).length
+      : typeof val === 'string'
+        ? new Blob([val]).size
+        : 0;
+```
+
+```js
+size([1, 2, 3, 4, 5]); // 5
+size('size'); // 4
+size({ one: 1, two: 2, three: 3 }); // 3
+```
+
 </details>
 
 ## 📜 string
@@ -4216,6 +4510,32 @@ const reverseString = str => [...str].reverse().join('');
 
 ```js
 reverseString('foobar'); // 'raboof'
+```
+
+### sortCharactersInString
+
+排列字串中的字符
+
+使用 `String.localeCompare()`
+
+```js
+const sortCharactersInString = str => [...str].sort((a, b) => a.localeCompare(b)).join('');
+```
+
+```js
+sortCharactersInString('cabbage'); // 'aabbceg'
+```
+
+### splitLines
+
+将多行字串转成按行划分的数组
+
+```js
+const splitLines = str => str.split(/\r?\n/);
+```
+
+```js
+splitLines('This\nis a\nmultiline\nstring.\n'); // ['This', 'is a', 'multiline', 'string.' , '']
 ```
 
 </details>
@@ -4848,6 +5168,18 @@ const RGBToHex = (r, g, b) => ((r << 16) + (g << 8) + b).toString(16).padStart(6
 
 ```js
 RGBToHex(255, 165, 1); // 'ffa501'
+```
+
+### serializeCookie
+
+构建cookie
+
+```js
+const serializeCookie = (name, val) => `${encodeURIComponent(name)}=${encodeURIComponent(val)}`;
+```
+
+```js
+serializeCookie('foo', 'bar'); // 'foo=bar'
 ```
 
 </details>
