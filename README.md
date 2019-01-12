@@ -1147,6 +1147,58 @@ reject(x => x % 2 === 0, [1, 2, 3, 4, 5]); // [1, 3, 5]
 reject(word => word.length > 4, ['Apple', 'Pear', 'Kiwi', 'Banana']); // ['Pear', 'Kiwi']
 ```
 
+### remove
+
+根据函数移除掉数组中对应的元素
+
+```js
+const remove = (arr, func) =>
+  Array.isArray(arr)
+    ? arr.filter(func).reduce((acc, val) => {
+      arr.splice(arr.indexOf(val), 1);
+      return acc.concat(val);
+    }, [])
+    : [];
+```
+
+```js
+remove([1, 2, 3, 4], n => n % 2 === 0); // [2, 4]
+```
+
+### sample
+
+数组采样
+
+```js
+const sample = arr => arr[Math.floor(Math.random() * arr.length)];
+```
+
+```js
+sample([3, 7, 9, 11]); // 9
+```
+
+### sampleSize
+
+数组采样，采样数目 `n`
+
+先用 [Fisher-Yates algorithm](https://github.com/30-seconds/30-seconds-of-code#shuffle) 算法洗牌，随后返回前 `n` 个值
+
+```js
+const sampleSize = ([...arr], n = 1) => {
+  let m = arr.length;
+  while (m) {
+    const i = Math.floor(Math.random() * m--);
+    [arr[m], arr[i]] = [arr[i], arr[m]];
+  }
+  return arr.slice(0, n);
+};
+```
+
+```js
+sampleSize([1, 2, 3], 2); // [3,1]
+sampleSize([1, 2, 3], 4); // [2,3,1]
+```
+
 </details>
 
 ## 🌐 browser
@@ -1736,6 +1788,47 @@ const redirect = (url, asLink = true) =>
 redirect('https://google.com');
 ```
 
+### runAsync
+
+在 [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers) 中执行函数
+
+```js
+const runAsync = fn => {
+  const worker = new Worker(
+    URL.createObjectURL(new Blob([`postMessage((${fn})());`]), {
+      type: 'application/javascript; charset=utf-8'
+    })
+  );
+  return new Promise((res, rej) => {
+    worker.onmessage = ({ data }) => {
+      res(data), worker.terminate();
+    };
+    worker.onerror = err => {
+      rej(err), worker.terminate();
+    };
+  });
+};
+```
+
+```js
+const longRunningFunction = () => {
+  let result = 0;
+  for (let i = 0; i < 1000; i++)
+    for (let j = 0; j < 700; j++) for (let k = 0; k < 300; k++) result = result + i + j + k;
+
+  return result;
+};
+/*
+  NOTE: Since the function is running in a different context, closures are not supported.
+  The function supplied to `runAsync` gets stringified, so everything becomes literal.
+  All variables and functions must be defined inside.
+*/
+runAsync(longRunningFunction).then(console.log); // 209685000000
+runAsync(() => 10 ** 3).then(console.log); // 1000
+let outsideVariable = 50;
+runAsync(() => typeof outsideVariable).then(console.log); // 'undefined'
+```
+
 </details>
 
 ## ⏱️ date
@@ -2299,6 +2392,19 @@ const greetJohn = partialRight(greet, 'John');
 greetJohn('Hello'); // 'Hello John!'
 ```
 
+### runPromisesInSeries
+
+顺序执行数组中的 `promise` 函数元素
+
+```js
+const runPromisesInSeries = ps => ps.reduce((p, next) => p.then(next), Promise.resolve());
+```
+
+```js
+const delay = d => new Promise(r => setTimeout(r, d));
+runPromisesInSeries([() => delay(1000), () => delay(2000)]); // Executes each promise sequentially, taking a total of 3 seconds to complete
+```
+
 </details>
 
 ## ➗ math
@@ -2835,6 +2941,18 @@ const randomNumberInRange = (min, max) => Math.random() * (max - min) + min;
 
 ```js
 randomNumberInRange(2, 10); // 6.0211363285087005
+```
+
+### round
+
+将数字整到指定精度
+
+```js
+const round = (n, decimals = 0) => Number(`${Math.round(`${n}e${decimals}`)}e-${decimals}`);
+```
+
+```js
+round(1.005, 2); // 1.01
 ```
 
 </details>
@@ -3704,6 +3822,26 @@ const pickBy = (obj, fn) =>
 pickBy({ a: 1, b: '2', c: 3 }, x => typeof x === 'number'); // { 'a': 1, 'c': 3 }
 ```
 
+### renameKeys
+
+替换键名
+
+```js
+const renameKeys = (keysMap, obj) =>
+  Object.keys(obj).reduce(
+    (acc, key) => ({
+      ...acc, // 还有这种方式
+      ...{ [keysMap[key] || key]: obj[key] }
+    }),
+    {}
+  );
+```
+
+```js
+const obj = { name: 'Bobo', job: 'Front-End Master', shoeSize: 100 };
+renameKeys({ name: 'firstName', job: 'passion' }, obj); // { firstName: 'Bobo', passion: 'Front-End Master', shoeSize: 100 }
+```
+
 </details>
 
 ## 📜 string
@@ -4054,6 +4192,30 @@ const PLURALS = {
 };
 const autoPluralize = pluralize(PLURALS);
 autoPluralize(2, 'person'); // 'people'
+```
+
+### removeNonASCII
+
+删除不可打印的ASCII字符
+
+```js
+const removeNonASCII = str => str.replace(/[^\x20-\x7E]/g, '');
+```
+
+```js
+removeNonASCII('äÄçÇéÉêlorem-ipsumöÖÐþúÚ'); // 'lorem-ipsum'
+```
+
+### reverseString
+
+翻转字串
+
+```js
+const reverseString = str => [...str].reverse().join('');
+```
+
+```js
+reverseString('foobar'); // 'raboof'
 ```
 
 </details>
@@ -4674,6 +4836,18 @@ const randomHexColorCode = () => {
 
 ```js
 randomHexColorCode(); // "#e34155"
+```
+
+### RGBToHex
+
+将 `RGB` 转成 `Hex`
+
+```js
+const RGBToHex = (r, g, b) => ((r << 16) + (g << 8) + b).toString(16).padStart(6, '0');
+```
+
+```js
+RGBToHex(255, 165, 1); // 'ffa501'
 ```
 
 </details>
