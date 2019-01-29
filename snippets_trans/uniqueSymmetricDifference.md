@@ -1,8 +1,6 @@
 ### uniqueSymmetricDifference
 
-Returns the unique symmetric difference between two arrays, not containing duplicate values from either array.
-
-Use `Array.prototype.filter()` and `Array.prototype.includes()` on each array to remove values contained in the other, then create a `Set` from the results, removing duplicate values.
+返回去重了的差集
 
 ```js
 const uniqueSymmetricDifference = (a, b) => [

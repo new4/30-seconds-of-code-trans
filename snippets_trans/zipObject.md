@@ -1,8 +1,6 @@
 ### zipObject
 
-Given an array of valid property identifiers and an array of values, return an object associating the properties to the values.
-
-Since an object can have undefined values but not undefined property pointers, the array of properties is used to decide the structure of the resulting object using `Array.prototype.reduce()`.
+根据数组上的对应位置的值构造对象
 
 ```js
 const zipObject = (props, values) =>

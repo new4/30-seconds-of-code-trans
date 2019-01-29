@@ -1,10 +1,10 @@
 ### validateNumber
 
-Returns `true` if the given value is a number, `false` otherwise.
+有效的数字
 
-Use `!isNaN()` in combination with `parseFloat()` to check if the argument is a number.
-Use `isFinite()` to check if the number is finite.
-Use `Number()` to check if the coercion holds.
+使用 `!isNaN()` 和 `parseFloat()` 检测是否是数字
+使用 `isFinite()` 检测是否是有限的
+使用 `Number()` 检测强制转换
 
 ```js
 const validateNumber = n => !isNaN(parseFloat(n)) && isFinite(n) && Number(n) == n;

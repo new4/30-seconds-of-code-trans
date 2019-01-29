@@ -1,8 +1,6 @@
 ### when
 
-Tests a value, `x`, against a predicate function. If `true`, return `fn(x)`. Else, return `x`. 
-
-Return a function expecting a single value, `x`, that returns the appropriate value based on `pred`.
+检测一个值 `x`，预测函数返回 `true` 的话就返回 `fn(x)`，否则返回 `x`
 
 ```js
 const when = (pred, whenTrue) => x => (pred(x) ? whenTrue(x) : x);

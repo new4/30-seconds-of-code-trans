@@ -1,8 +1,6 @@
 ### untildify
 
-Converts a tilde path to an absolute path.
-
-Use `String.prototype.replace()` with a regular expression and `OS.homedir()` to replace the `~` in the start of the path with the home directory.
+转换波浪开头的路径为绝对路径
 
 ```js
 const untildify = str => str.replace(/^~($|\/|\\)/, `${require('os').homedir()}$1`);

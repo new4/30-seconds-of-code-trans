@@ -1,9 +1,6 @@
 ### unfold
 
-Builds an array, using an iterator function and an initial seed value.
-
-Use a `while` loop and `Array.prototype.push()` to call the function repeatedly until it returns `false`.
-The iterator function accepts one argument (`seed`) and must always return an array with two elements ([`value`, `nextSeed`]) or `false` to terminate.
+使用迭代器函数和初始种子值构建数组
 
 ```js
 const unfold = (fn, seed) => {

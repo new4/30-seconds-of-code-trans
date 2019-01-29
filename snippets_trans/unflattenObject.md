@@ -1,10 +1,6 @@
 ### unflattenObject
 
-Unflatten an object with the paths for keys.
-
-Use `Object.keys(obj)` combined with `Array.prototype.reduce()` to convert flattened path node to a leaf node.
-If the value of a key contains a dot delimiter (`.`), use `Array.prototype.split('.')`, string transformations and `JSON.parse()` to create an object, then `Object.assign()` to create the leaf node.
-Otherwise, add the appropriate key-value pair to the accumulator object.
+根据属性路径构造对象
 
 ```js
 const unflattenObject = obj =>
@@ -13,7 +9,7 @@ const unflattenObject = obj =>
       const keys = k.split('.');
       Object.assign(
         acc,
-        JSON.parse(
+        JSON.parse( // 解析json字串来生成对象
           '{' +
             keys.map((v, i) => (i !== keys.length - 1 ? `"${v}":{` : `"${v}":`)).join('') +
             obj[k] +

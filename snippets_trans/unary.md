@@ -1,8 +1,6 @@
 ### unary
 
-Creates a function that accepts up to one argument, ignoring any additional arguments.
-
-Call the provided function, `fn`, with just the first argument given.
+只允许传入一个参数
 
 ```js
 const unary = fn => val => fn(val);

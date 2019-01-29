@@ -1,9 +1,6 @@
 ### uniqueElementsByRight
 
-Returns all unique values of an array, based on a provided comparator function.
-
-Use `Array.prototype.reduce()` and `Array.prototype.some()` for an array containing only the last unique occurence of each value, based on the comparator function, `fn`.
-The comparator function takes two arguments: the values of the two elements being compared.
+去重（从右向左）
 
 ```js
 const uniqueElementsByRight = (arr, fn) =>

@@ -1,10 +1,6 @@
 ### without
 
-Filters out the elements of an array, that have one of the specified values.
-
-Use `Array.prototype.filter()` to create an array excluding(using `!Array.includes()`) all given values.
-
-_(For a snippet that mutates the original array see [`pull`](#pull))_
+返回数组中除指定元素之外的元素
 
 ```js
 const without = (arr, ...args) => arr.filter(v => !args.includes(v));

@@ -1,8 +1,6 @@
 ### union
 
-Returns every element that exists in any of the two arrays once.
-
-Create a `Set` with all values of `a` and `b` and convert to an array.
+并集
 
 ```js
 const union = (a, b) => Array.from(new Set([...a, ...b]));

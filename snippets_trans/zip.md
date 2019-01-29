@@ -1,10 +1,6 @@
 ### zip
 
-Creates an array of elements, grouped based on the position in the original arrays.
-
-Use `Math.max.apply()` to get the longest array in the arguments.
-Creates an array with that length as return value and use `Array.from()` with a map-function to create an array of grouped elements.
-If lengths of the argument-arrays vary, `undefined` is used where no value could be found.
+根据数组上相同位置的元素构造新的数组
 
 ```js
 const zip = (...arrays) => {

@@ -1,8 +1,8 @@
 ### UUIDGeneratorNode
 
-Generates a UUID in Node.JS.
+生成 `Node.JS` 环境下的 `UUID`
 
-Use `crypto` API to generate a UUID, compliant with [RFC4122](https://www.ietf.org/rfc/rfc4122.txt) version 4.
+使用 `crypto` API, 遵从 [RFC4122](https://www.ietf.org/rfc/rfc4122.txt) version 4.
 
 ```js
 const crypto = require('crypto');

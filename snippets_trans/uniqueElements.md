@@ -1,8 +1,6 @@
 ### uniqueElements
 
-Returns all unique values of an array.
-
-Use ES6 `Set` and the `...rest` operator to discard all duplicated values.
+去重
 
 ```js
 const uniqueElements = arr => [...new Set(arr)];

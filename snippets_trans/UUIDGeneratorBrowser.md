@@ -1,8 +1,8 @@
 ### UUIDGeneratorBrowser
 
-Generates a UUID in a browser.
+生成浏览器环境下的 `UUID`
 
-Use `crypto` API to generate a UUID, compliant with [RFC4122](https://www.ietf.org/rfc/rfc4122.txt) version 4.
+使用 `crypto` API, 遵从 [RFC4122](https://www.ietf.org/rfc/rfc4122.txt) version 4.
 
 ```js
 const UUIDGeneratorBrowser = () =>

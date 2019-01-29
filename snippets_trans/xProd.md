@@ -1,8 +1,6 @@
 ### xProd
 
-Creates a new array out of the two supplied by creating each possible pair from the arrays.
-
-Use `Array.prototype.reduce()`, `Array.prototype.map()` and `Array.prototype.concat()` to produce every possible pair from the elements of the two arrays and save them in an array.
+两两配对组合生成一个新的数组
 
 ```js
 const xProd = (a, b) => a.reduce((acc, x) => acc.concat(b.map(y => [x, y])), []);
