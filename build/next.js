@@ -15,7 +15,9 @@ const {
   log: {
     logBefore,
     logAfter,
-    faillogBoth,
+  },
+  shouldBe: {
+    sbValidArray,
   },
 } = require('@new4/utils');
 
@@ -31,9 +33,7 @@ const transFiles = getExistFiles(SNIPPETS_TRANS);
 
 const unReadList = xor(transFiles, srcFiles).sort(strSortFn);
 
-if (!unReadList || !unReadList.length) {
-  faillogBoth('already finished!');
-}
+sbValidArray(unReadList, 'already finished!');
 
 const [next] = unReadList;
 
