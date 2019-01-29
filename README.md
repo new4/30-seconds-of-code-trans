@@ -195,9 +195,7 @@ arrayMax([1, 2, 3]); // 3
 
 ### unary
 
-Creates a function that accepts up to one argument, ignoring any additional arguments.
-
-Call the provided function, `fn`, with just the first argument given.
+只允许传入一个参数
 
 ```js
 const unary = fn => val => fn(val);
@@ -1518,9 +1516,7 @@ managers; // [ { manager:1, employees: [ { id: 2, first: "Joe" }, { id: 3, first
 
 ### union
 
-Returns every element that exists in any of the two arrays once.
-
-Create a `Set` with all values of `a` and `b` and convert to an array.
+并集
 
 ```js
 const union = (a, b) => Array.from(new Set([...a, ...b]));
@@ -1532,11 +1528,7 @@ union([1, 2, 3], [4, 3, 2]); // [1,2,3,4]
 
 ### unionBy
 
-Returns every element that exists in any of the two arrays once, after applying the provided function to each array element of both.
-
-Create a `Set` by applying all `fn` to all values of `a`.
-Create a `Set` from `a` and all elements in `b` whose value, after applying `fn` does not match a value in the previously created set.
-Return the last set converted to an array.
+并集
 
 ```js
 const unionBy = (a, b, fn) => {
@@ -1551,9 +1543,7 @@ unionBy([2.1], [1.2, 2.3], Math.floor); // [2.1, 1.2]
 
 ### unionWith
 
-Returns every element that exists in any of the two arrays once, using a provided comparator function.
-
-Create a `Set` with all values of `a` and values in `b` for which the comparator finds no matches in `a`, using `Array.prototype.findIndex()`.
+按照一定规则求并集
 
 ```js
 const unionWith = (a, b, comp) =>
@@ -1566,9 +1556,7 @@ unionWith([1, 1.2, 1.5, 3, 0], [1.9, 3, 0, 3.9], (a, b) => Math.round(a) === Mat
 
 ### uniqueElements
 
-Returns all unique values of an array.
-
-Use ES6 `Set` and the `...rest` operator to discard all duplicated values.
+去重
 
 ```js
 const uniqueElements = arr => [...new Set(arr)];
@@ -1580,10 +1568,7 @@ uniqueElements([1, 2, 2, 3, 4, 4, 5]); // [1, 2, 3, 4, 5]
 
 ### uniqueElementsBy
 
-Returns all unique values of an array, based on a provided comparator function.
-
-Use `Array.prototype.reduce()` and `Array.prototype.some()` for an array containing only the first unique occurence of each value, based on the comparator function, `fn`.
-The comparator function takes two arguments: the values of the two elements being compared.
+按照一定规则去重
 
 ```js
 const uniqueElementsBy = (arr, fn) =>
@@ -1608,10 +1593,7 @@ uniqueElementsBy(
 
 ### uniqueElementsByRight
 
-Returns all unique values of an array, based on a provided comparator function.
-
-Use `Array.prototype.reduce()` and `Array.prototype.some()` for an array containing only the last unique occurence of each value, based on the comparator function, `fn`.
-The comparator function takes two arguments: the values of the two elements being compared.
+去重（从右向左）
 
 ```js
 const uniqueElementsByRight = (arr, fn) =>
@@ -1636,9 +1618,7 @@ uniqueElementsByRight(
 
 ### uniqueSymmetricDifference
 
-Returns the unique symmetric difference between two arrays, not containing duplicate values from either array.
-
-Use `Array.prototype.filter()` and `Array.prototype.includes()` on each array to remove values contained in the other, then create a `Set` from the results, removing duplicate values.
+返回去重了的差集
 
 ```js
 const uniqueSymmetricDifference = (a, b) => [
@@ -1652,11 +1632,6 @@ uniqueSymmetricDifference([1, 2, 2], [1, 3, 1]); // [2, 3]
 ```
 
 ### unzip
-
-Creates an array of arrays, ungrouping the elements in an array produced by [zip](#zip).
-
-Use `Math.max.apply()` to get the longest subarray in the array, `Array.prototype.map()` to make each element an array.
-Use `Array.prototype.reduce()` and `Array.prototype.forEach()` to map grouped values to individual arrays.
 
 ```js
 const unzip = arr =>
@@ -1674,12 +1649,6 @@ unzip([['a', 1, true], ['b', 2]]); // [['a', 'b'], [1, 2], [true]]
 ```
 
 ### unzipWith
-
-Creates an array of elements, ungrouping the elements in an array produced by [zip](#zip) and applying the provided function.
-
-Use `Math.max.apply()` to get the longest subarray in the array, `Array.prototype.map()` to make each element an array.
-Use `Array.prototype.reduce()` and `Array.prototype.forEach()` to map grouped values to individual arrays.
-Use `Array.prototype.map()` and the spread operator (`...`) to apply `fn` to each individual group of elements.
 
 ```js
 const unzipWith = (arr, fn) =>
@@ -1699,11 +1668,7 @@ unzipWith([[1, 10, 100], [2, 20, 200]], (...args) => args.reduce((acc, v) => acc
 
 ### without
 
-Filters out the elements of an array, that have one of the specified values.
-
-Use `Array.prototype.filter()` to create an array excluding(using `!Array.includes()`) all given values.
-
-_(For a snippet that mutates the original array see [`pull`](#pull))_
+返回数组中除指定元素之外的元素
 
 ```js
 const without = (arr, ...args) => arr.filter(v => !args.includes(v));
@@ -1715,9 +1680,7 @@ without([2, 1, 2, 3], 1, 2); // [3]
 
 ### xProd
 
-Creates a new array out of the two supplied by creating each possible pair from the arrays.
-
-Use `Array.prototype.reduce()`, `Array.prototype.map()` and `Array.prototype.concat()` to produce every possible pair from the elements of the two arrays and save them in an array.
+两两配对组合生成一个新的数组
 
 ```js
 const xProd = (a, b) => a.reduce((acc, x) => acc.concat(b.map(y => [x, y])), []);
@@ -1729,11 +1692,7 @@ xProd([1, 2], ['a', 'b']); // [[1, 'a'], [1, 'b'], [2, 'a'], [2, 'b']]
 
 ### zip
 
-Creates an array of elements, grouped based on the position in the original arrays.
-
-Use `Math.max.apply()` to get the longest array in the arguments.
-Creates an array with that length as return value and use `Array.from()` with a map-function to create an array of grouped elements.
-If lengths of the argument-arrays vary, `undefined` is used where no value could be found.
+根据数组上相同位置的元素构造新的数组
 
 ```js
 const zip = (...arrays) => {
@@ -1751,9 +1710,7 @@ zip(['a'], [1, 2], [true, false]); // [['a', 1, true], [undefined, 2, false]]
 
 ### zipObject
 
-Given an array of valid property identifiers and an array of values, return an object associating the properties to the values.
-
-Since an object can have undefined values but not undefined property pointers, the array of properties is used to decide the structure of the resulting object using `Array.prototype.reduce()`.
+根据数组上的对应位置的值构造对象
 
 ```js
 const zipObject = (props, values) =>
@@ -1767,13 +1724,7 @@ zipObject(['a', 'b'], [1, 2, 3]); // {a: 1, b: 2}
 
 ### zipWith
 
-Creates an array of elements, grouped based on the position in the original arrays and using function as the last value to specify how grouped values should be combined.
-
-Check if the last argument provided is a function.
-Use `Math.max()` to get the longest array in the arguments.
-Creates an array with that length as return value and use `Array.from()` with a map-function to create an array of grouped elements.
-If lengths of the argument-arrays vary, `undefined` is used where no value could be found.
-The function is invoked with the elements of each group `(...group)`.
+以特定规则构造数组
 
 ```js
 const zipWith = (...array) => {
@@ -2525,9 +2476,9 @@ triggerEvent(document.getElementById('myId'), 'click', { username: 'bob' });
 
 ### UUIDGeneratorBrowser
 
-Generates a UUID in a browser.
+生成浏览器环境下的 `UUID`
 
-Use `crypto` API to generate a UUID, compliant with [RFC4122](https://www.ietf.org/rfc/rfc4122.txt) version 4.
+使用 `crypto` API, 遵从 [RFC4122](https://www.ietf.org/rfc/rfc4122.txt) version 4.
 
 ```js
 const UUIDGeneratorBrowser = () =>
@@ -3212,13 +3163,7 @@ console.log(output); // 01234
 
 ### uncurry
 
-Uncurries a function up to depth `n`.
-
-Return a variadic function.
-Use `Array.prototype.reduce()` on the provided arguments to call each subsequent curry level of the function.
-If the `length` of the provided arguments is less than `n` throw an error.
-Otherwise, call `fn` with the proper amount of arguments, using `Array.prototype.slice(0, n)`.
-Omit the second argument, `n`, to uncurry up to depth `1`.
+反柯里化
 
 ```js
 const uncurry = (fn, n = 1) => (...args) => {
@@ -3236,10 +3181,7 @@ uncurriedAdd(1, 2, 3); // 6
 
 ### unfold
 
-Builds an array, using an iterator function and an initial seed value.
-
-Use a `while` loop and `Array.prototype.push()` to call the function repeatedly until it returns `false`.
-The iterator function accepts one argument (`seed`) and must always return an array with two elements ([`value`, `nextSeed`]) or `false` to terminate.
+使用迭代器函数和初始种子值构建数组
 
 ```js
 const unfold = (fn, seed) => {
@@ -3257,9 +3199,7 @@ unfold(f, 10); // [-10, -20, -30, -40, -50]
 
 ### when
 
-Tests a value, `x`, against a predicate function. If `true`, return `fn(x)`. Else, return `x`. 
-
-Return a function expecting a single value, `x`, that returns the appropriate value based on `pred`.
+检测一个值 `x`，预测函数返回 `true` 的话就返回 `fn(x)`，否则返回 `x`
 
 ```js
 const when = (pred, whenTrue) => x => (pred(x) ? whenTrue(x) : x);
@@ -4168,9 +4108,7 @@ console.log(arr); // ['line1', 'line2', 'line3']
 
 ### untildify
 
-Converts a tilde path to an absolute path.
-
-Use `String.prototype.replace()` with a regular expression and `OS.homedir()` to replace the `~` in the start of the path with the home directory.
+转换波浪开头的路径为绝对路径
 
 ```js
 const untildify = str => str.replace(/^~($|\/|\\)/, `${require('os').homedir()}$1`);
@@ -4182,9 +4120,9 @@ untildify('~/node'); // '/Users/aUser/node'
 
 ### UUIDGeneratorNode
 
-Generates a UUID in Node.JS.
+生成 `Node.JS` 环境下的 `UUID`
 
-Use `crypto` API to generate a UUID, compliant with [RFC4122](https://www.ietf.org/rfc/rfc4122.txt) version 4.
+使用 `crypto` API, 遵从 [RFC4122](https://www.ietf.org/rfc/rfc4122.txt) version 4.
 
 ```js
 const crypto = require('crypto');
@@ -4898,9 +4836,7 @@ transform(
 
 ### truthCheckCollection
 
-Checks if the predicate (second argument) is truthy on all elements of a collection (first argument).
-
-Use `Array.prototype.every()` to check if each passed object has the specified property and if it returns a truthy value.
+集合元素验真
 
 ```js
 const truthCheckCollection = (collection, pre) => collection.every(obj => obj[pre]);
@@ -4912,11 +4848,7 @@ truthCheckCollection([{ user: 'Tinky-Winky', sex: 'male' }, { user: 'Dipsy', sex
 
 ### unflattenObject
 
-Unflatten an object with the paths for keys.
-
-Use `Object.keys(obj)` combined with `Array.prototype.reduce()` to convert flattened path node to a leaf node.
-If the value of a key contains a dot delimiter (`.`), use `Array.prototype.split('.')`, string transformations and `JSON.parse()` to create an object, then `Object.assign()` to create the leaf node.
-Otherwise, add the appropriate key-value pair to the accumulator object.
+根据属性路径构造对象
 
 ```js
 const unflattenObject = obj =>
@@ -4925,7 +4857,7 @@ const unflattenObject = obj =>
       const keys = k.split('.');
       Object.assign(
         acc,
-        JSON.parse(
+        JSON.parse( // 解析json字串来生成对象
           '{' +
             keys.map((v, i) => (i !== keys.length - 1 ? `"${v}":{` : `"${v}":`)).join('') +
             obj[k] +
@@ -5466,10 +5398,7 @@ toTitleCase('some-mixed_string with spaces_underscores-and-hyphens'); // 'Some M
 
 ### truncateString
 
-Truncates a string up to a specified length.
-
-Determine if the string's `length` is greater than `num`.
-Return the string truncated to the desired length, with `'...'` appended to the end or the original string.
+缩略显示字串
 
 ```js
 const truncateString = (str, num) =>
@@ -5482,9 +5411,7 @@ truncateString('boomerang', 7); // 'boom...'
 
 ### unescapeHTML
 
-Unescapes escaped HTML characters.
-
-Use `String.prototype.replace()` with a regex that matches the characters that need to be unescaped, using a callback function to replace each escaped character instance with its associated unescaped character using a dictionary (object).
+反 escape HTML
 
 ```js
 const unescapeHTML = str =>
@@ -5507,9 +5434,7 @@ unescapeHTML('&lt;a href=&quot;#&quot;&gt;Me &amp; you&lt;/a&gt;'); // '<a href=
 
 ### URLJoin
 
-Joins all given URL segments together, then normalizes the resulting URL.
-
-Use `String.prototype.join('/')` to combine URL segments, then a series of `String.prototype.replace()` calls with various regexps to normalize the resulting URL (remove double slashes, add proper slashes for protocol, remove slashes before parameters, combine parameters with `'&'` and normalize first parameter delimiter).
+合并 url 片段
 
 ```js
 const URLJoin = (...args) =>
@@ -5529,10 +5454,7 @@ URLJoin('http://www.google.com', 'a', '/b/cd', '?foo=123', '?bar=foo'); // 'http
 
 ### words
 
-Converts a given string into an array of words.
-
-Use `String.prototype.split()` with a supplied pattern (defaults to non-alpha as a regexp) to convert to an array of strings. Use `Array.prototype.filter()` to remove any empty strings.
-Omit the second argument to use the default regexp.
+将字串分割成单词组成的数组
 
 ```js
 const words = (str, pattern = /[^a-zA-Z-]+/) => str.split(pattern).filter(Boolean);
@@ -6258,11 +6180,11 @@ toOrdinalSuffix('123'); // "123rd"
 
 ### validateNumber
 
-Returns `true` if the given value is a number, `false` otherwise.
+有效的数字
 
-Use `!isNaN()` in combination with `parseFloat()` to check if the argument is a number.
-Use `isFinite()` to check if the number is finite.
-Use `Number()` to check if the coercion holds.
+使用 `!isNaN()` 和 `parseFloat()` 检测是否是数字
+使用 `isFinite()` 检测是否是有限的
+使用 `Number()` 检测强制转换
 
 ```js
 const validateNumber = n => !isNaN(parseFloat(n)) && isFinite(n) && Number(n) == n;
@@ -6274,10 +6196,8 @@ validateNumber('10'); // true
 
 ### yesNo
 
-Returns `true` if the string is `y`/`yes` or `false` if the string is `n`/`no`.
-
-Use `RegExp.test()` to check if the string evaluates to `y/yes` or `n/no`.
-Omit the second argument, `def` to set the default answer as `no`.
+字串是 `y`/`yes` 则返回 `true`
+字串是 `n`/`no` 则返回 `false`
 
 ```js
 const yesNo = (val, def = false) =>
