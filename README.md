@@ -193,6 +193,20 @@ const arrayMax = spreadOver(Math.max);
 arrayMax([1, 2, 3]); // 3
 ```
 
+### unary
+
+Creates a function that accepts up to one argument, ignoring any additional arguments.
+
+Call the provided function, `fn`, with just the first argument given.
+
+```js
+const unary = fn => val => fn(val);
+```
+
+```js
+['6', '8', '10'].map(unary(parseInt)); // [6, 8, 10]
+```
+
 </details>
 
 ## 📚 array
@@ -1502,6 +1516,285 @@ managers.forEach(
 managers; // [ { manager:1, employees: [ { id: 2, first: "Joe" }, { id: 3, first: "Moe" } ] } ]
 ```
 
+### union
+
+Returns every element that exists in any of the two arrays once.
+
+Create a `Set` with all values of `a` and `b` and convert to an array.
+
+```js
+const union = (a, b) => Array.from(new Set([...a, ...b]));
+```
+
+```js
+union([1, 2, 3], [4, 3, 2]); // [1,2,3,4]
+```
+
+### unionBy
+
+Returns every element that exists in any of the two arrays once, after applying the provided function to each array element of both.
+
+Create a `Set` by applying all `fn` to all values of `a`.
+Create a `Set` from `a` and all elements in `b` whose value, after applying `fn` does not match a value in the previously created set.
+Return the last set converted to an array.
+
+```js
+const unionBy = (a, b, fn) => {
+  const s = new Set(a.map(fn));
+  return Array.from(new Set([...a, ...b.filter(x => !s.has(fn(x)))]));
+};
+```
+
+```js
+unionBy([2.1], [1.2, 2.3], Math.floor); // [2.1, 1.2]
+```
+
+### unionWith
+
+Returns every element that exists in any of the two arrays once, using a provided comparator function.
+
+Create a `Set` with all values of `a` and values in `b` for which the comparator finds no matches in `a`, using `Array.prototype.findIndex()`.
+
+```js
+const unionWith = (a, b, comp) =>
+  Array.from(new Set([...a, ...b.filter(x => a.findIndex(y => comp(x, y)) === -1)]));
+```
+
+```js
+unionWith([1, 1.2, 1.5, 3, 0], [1.9, 3, 0, 3.9], (a, b) => Math.round(a) === Math.round(b)); // [1, 1.2, 1.5, 3, 0, 3.9]
+```
+
+### uniqueElements
+
+Returns all unique values of an array.
+
+Use ES6 `Set` and the `...rest` operator to discard all duplicated values.
+
+```js
+const uniqueElements = arr => [...new Set(arr)];
+```
+
+```js
+uniqueElements([1, 2, 2, 3, 4, 4, 5]); // [1, 2, 3, 4, 5]
+```
+
+### uniqueElementsBy
+
+Returns all unique values of an array, based on a provided comparator function.
+
+Use `Array.prototype.reduce()` and `Array.prototype.some()` for an array containing only the first unique occurence of each value, based on the comparator function, `fn`.
+The comparator function takes two arguments: the values of the two elements being compared.
+
+```js
+const uniqueElementsBy = (arr, fn) =>
+  arr.reduce((acc, v) => {
+    if (!acc.some(x => fn(v, x))) acc.push(v);
+    return acc;
+  }, []);
+```
+
+```js
+uniqueElementsBy(
+  [
+    { id: 0, value: 'a' },
+    { id: 1, value: 'b' },
+    { id: 2, value: 'c' },
+    { id: 1, value: 'd' },
+    { id: 0, value: 'e' }
+  ],
+  (a, b) => a.id == b.id
+); // [ { id: 0, value: 'a' }, { id: 1, value: 'b' }, { id: 2, value: 'c' } ]
+```
+
+### uniqueElementsByRight
+
+Returns all unique values of an array, based on a provided comparator function.
+
+Use `Array.prototype.reduce()` and `Array.prototype.some()` for an array containing only the last unique occurence of each value, based on the comparator function, `fn`.
+The comparator function takes two arguments: the values of the two elements being compared.
+
+```js
+const uniqueElementsByRight = (arr, fn) =>
+  arr.reduceRight((acc, v) => {
+    if (!acc.some(x => fn(v, x))) acc.push(v);
+    return acc;
+  }, []);
+```
+
+```js
+uniqueElementsByRight(
+  [
+    { id: 0, value: 'a' },
+    { id: 1, value: 'b' },
+    { id: 2, value: 'c' },
+    { id: 1, value: 'd' },
+    { id: 0, value: 'e' }
+  ],
+  (a, b) => a.id == b.id
+); // [ { id: 0, value: 'e' }, { id: 1, value: 'd' }, { id: 2, value: 'c' } ]
+```
+
+### uniqueSymmetricDifference
+
+Returns the unique symmetric difference between two arrays, not containing duplicate values from either array.
+
+Use `Array.prototype.filter()` and `Array.prototype.includes()` on each array to remove values contained in the other, then create a `Set` from the results, removing duplicate values.
+
+```js
+const uniqueSymmetricDifference = (a, b) => [
+  ...new Set([...a.filter(v => !b.includes(v)), ...b.filter(v => !a.includes(v))])
+];
+```
+
+```js
+uniqueSymmetricDifference([1, 2, 3], [1, 2, 4]); // [3, 4]
+uniqueSymmetricDifference([1, 2, 2], [1, 3, 1]); // [2, 3]
+```
+
+### unzip
+
+Creates an array of arrays, ungrouping the elements in an array produced by [zip](#zip).
+
+Use `Math.max.apply()` to get the longest subarray in the array, `Array.prototype.map()` to make each element an array.
+Use `Array.prototype.reduce()` and `Array.prototype.forEach()` to map grouped values to individual arrays.
+
+```js
+const unzip = arr =>
+  arr.reduce(
+    (acc, val) => (val.forEach((v, i) => acc[i].push(v)), acc),
+    Array.from({
+      length: Math.max(...arr.map(x => x.length))
+    }).map(x => [])
+  );
+```
+
+```js
+unzip([['a', 1, true], ['b', 2, false]]); // [['a', 'b'], [1, 2], [true, false]]
+unzip([['a', 1, true], ['b', 2]]); // [['a', 'b'], [1, 2], [true]]
+```
+
+### unzipWith
+
+Creates an array of elements, ungrouping the elements in an array produced by [zip](#zip) and applying the provided function.
+
+Use `Math.max.apply()` to get the longest subarray in the array, `Array.prototype.map()` to make each element an array.
+Use `Array.prototype.reduce()` and `Array.prototype.forEach()` to map grouped values to individual arrays.
+Use `Array.prototype.map()` and the spread operator (`...`) to apply `fn` to each individual group of elements.
+
+```js
+const unzipWith = (arr, fn) =>
+  arr
+    .reduce(
+      (acc, val) => (val.forEach((v, i) => acc[i].push(v)), acc),
+      Array.from({
+        length: Math.max(...arr.map(x => x.length))
+      }).map(x => [])
+    )
+    .map(val => fn(...val));
+```
+
+```js
+unzipWith([[1, 10, 100], [2, 20, 200]], (...args) => args.reduce((acc, v) => acc + v, 0)); // [3, 30, 300]
+```
+
+### without
+
+Filters out the elements of an array, that have one of the specified values.
+
+Use `Array.prototype.filter()` to create an array excluding(using `!Array.includes()`) all given values.
+
+_(For a snippet that mutates the original array see [`pull`](#pull))_
+
+```js
+const without = (arr, ...args) => arr.filter(v => !args.includes(v));
+```
+
+```js
+without([2, 1, 2, 3], 1, 2); // [3]
+```
+
+### xProd
+
+Creates a new array out of the two supplied by creating each possible pair from the arrays.
+
+Use `Array.prototype.reduce()`, `Array.prototype.map()` and `Array.prototype.concat()` to produce every possible pair from the elements of the two arrays and save them in an array.
+
+```js
+const xProd = (a, b) => a.reduce((acc, x) => acc.concat(b.map(y => [x, y])), []);
+```
+
+```js
+xProd([1, 2], ['a', 'b']); // [[1, 'a'], [1, 'b'], [2, 'a'], [2, 'b']]
+```
+
+### zip
+
+Creates an array of elements, grouped based on the position in the original arrays.
+
+Use `Math.max.apply()` to get the longest array in the arguments.
+Creates an array with that length as return value and use `Array.from()` with a map-function to create an array of grouped elements.
+If lengths of the argument-arrays vary, `undefined` is used where no value could be found.
+
+```js
+const zip = (...arrays) => {
+  const maxLength = Math.max(...arrays.map(x => x.length));
+  return Array.from({ length: maxLength }).map((_, i) => {
+    return Array.from({ length: arrays.length }, (_, k) => arrays[k][i]);
+  });
+};
+```
+
+```js
+zip(['a', 'b'], [1, 2], [true, false]); // [['a', 1, true], ['b', 2, false]]
+zip(['a'], [1, 2], [true, false]); // [['a', 1, true], [undefined, 2, false]]
+```
+
+### zipObject
+
+Given an array of valid property identifiers and an array of values, return an object associating the properties to the values.
+
+Since an object can have undefined values but not undefined property pointers, the array of properties is used to decide the structure of the resulting object using `Array.prototype.reduce()`.
+
+```js
+const zipObject = (props, values) =>
+  props.reduce((obj, prop, index) => ((obj[prop] = values[index]), obj), {});
+```
+
+```js
+zipObject(['a', 'b', 'c'], [1, 2]); // {a: 1, b: 2, c: undefined}
+zipObject(['a', 'b'], [1, 2, 3]); // {a: 1, b: 2}
+```
+
+### zipWith
+
+Creates an array of elements, grouped based on the position in the original arrays and using function as the last value to specify how grouped values should be combined.
+
+Check if the last argument provided is a function.
+Use `Math.max()` to get the longest array in the arguments.
+Creates an array with that length as return value and use `Array.from()` with a map-function to create an array of grouped elements.
+If lengths of the argument-arrays vary, `undefined` is used where no value could be found.
+The function is invoked with the elements of each group `(...group)`.
+
+```js
+const zipWith = (...array) => {
+  const fn = typeof array[array.length - 1] === 'function' ? array.pop() : undefined;
+  return Array.from(
+    { length: Math.max(...array.map(a => a.length)) },
+    (_, i) => (fn ? fn(...array.map(a => a[i])) : array.map(a => a[i]))
+  );
+};
+```
+
+```js
+zipWith([1, 2], [10, 20], [100, 200], (a, b, c) => a + b + c); // [111,222]
+zipWith(
+  [1, 2, 3],
+  [10, 20],
+  [100, 200],
+  (a, b, c) => (a != null ? a : 'a') + (b != null ? b : 'b') + (c != null ? c : 'c')
+); // [111, 222, '3bc']
+```
+
 </details>
 
 ## 🌐 browser
@@ -2230,6 +2523,23 @@ triggerEvent(document.getElementById('myId'), 'click');
 triggerEvent(document.getElementById('myId'), 'click', { username: 'bob' });
 ```
 
+### UUIDGeneratorBrowser
+
+Generates a UUID in a browser.
+
+Use `crypto` API to generate a UUID, compliant with [RFC4122](https://www.ietf.org/rfc/rfc4122.txt) version 4.
+
+```js
+const UUIDGeneratorBrowser = () =>
+  ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+    (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)
+  );
+```
+
+```js
+UUIDGeneratorBrowser(); // '7982fcfe-5721-4632-bede-6000885be57d'
+```
+
 </details>
 
 ## ⏱️ date
@@ -2898,6 +3208,67 @@ const times = (n, fn, context = undefined) => {
 var output = '';
 times(5, i => (output += i));
 console.log(output); // 01234
+```
+
+### uncurry
+
+Uncurries a function up to depth `n`.
+
+Return a variadic function.
+Use `Array.prototype.reduce()` on the provided arguments to call each subsequent curry level of the function.
+If the `length` of the provided arguments is less than `n` throw an error.
+Otherwise, call `fn` with the proper amount of arguments, using `Array.prototype.slice(0, n)`.
+Omit the second argument, `n`, to uncurry up to depth `1`.
+
+```js
+const uncurry = (fn, n = 1) => (...args) => {
+  const next = acc => args => args.reduce((x, y) => x(y), acc);
+  if (n > args.length) throw new RangeError('Arguments too few!');
+  return next(fn)(args.slice(0, n));
+};
+```
+
+```js
+const add = x => y => z => x + y + z;
+const uncurriedAdd = uncurry(add, 3);
+uncurriedAdd(1, 2, 3); // 6
+```
+
+### unfold
+
+Builds an array, using an iterator function and an initial seed value.
+
+Use a `while` loop and `Array.prototype.push()` to call the function repeatedly until it returns `false`.
+The iterator function accepts one argument (`seed`) and must always return an array with two elements ([`value`, `nextSeed`]) or `false` to terminate.
+
+```js
+const unfold = (fn, seed) => {
+  let result = [],
+    val = [null, seed];
+  while ((val = fn(val[1]))) result.push(val[0]);
+  return result;
+};
+```
+
+```js
+var f = n => (n > 50 ? false : [-n, n + 10]);
+unfold(f, 10); // [-10, -20, -30, -40, -50]
+```
+
+### when
+
+Tests a value, `x`, against a predicate function. If `true`, return `fn(x)`. Else, return `x`. 
+
+Return a function expecting a single value, `x`, that returns the appropriate value based on `pred`.
+
+```js
+const when = (pred, whenTrue) => x => (pred(x) ? whenTrue(x) : x);
+```
+
+```js
+const doubleEvenNumbers = when(x => x % 2 === 0, x => x * 2);
+doubleEvenNumbers(2); // 4
+doubleEvenNumbers(1); // 1
 ```
 
 </details>
@@ -3795,6 +4166,38 @@ let arr = readFileLines('test.txt');
 console.log(arr); // ['line1', 'line2', 'line3']
 ```
 
+### untildify
+
+Converts a tilde path to an absolute path.
+
+Use `String.prototype.replace()` with a regular expression and `OS.homedir()` to replace the `~` in the start of the path with the home directory.
+
+```js
+const untildify = str => str.replace(/^~($|\/|\\)/, `${require('os').homedir()}$1`);
+```
+
+```js
+untildify('~/node'); // '/Users/aUser/node'
+```
+
+### UUIDGeneratorNode
+
+Generates a UUID in Node.JS.
+
+Use `crypto` API to generate a UUID, compliant with [RFC4122](https://www.ietf.org/rfc/rfc4122.txt) version 4.
+
+```js
+const crypto = require('crypto');
+const UUIDGeneratorNode = () =>
+  ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+    (c ^ (crypto.randomBytes(1)[0] & (15 >> (c / 4)))).toString(16)
+  );
+```
+
+```js
+UUIDGeneratorNode(); // '79c7c136-60ee-40a2-beb2-856f1feabefc'
+```
+
 </details>
 
 ## 🗃️ object
@@ -4493,6 +4896,51 @@ transform(
 ); // { '1': ['a', 'c'], '2': ['b'] }
 ```
 
+### truthCheckCollection
+
+Checks if the predicate (second argument) is truthy on all elements of a collection (first argument).
+
+Use `Array.prototype.every()` to check if each passed object has the specified property and if it returns a truthy value.
+
+```js
+const truthCheckCollection = (collection, pre) => collection.every(obj => obj[pre]);
+```
+
+```js
+truthCheckCollection([{ user: 'Tinky-Winky', sex: 'male' }, { user: 'Dipsy', sex: 'male' }], 'sex'); // true
+```
+
+### unflattenObject
+
+Unflatten an object with the paths for keys.
+
+Use `Object.keys(obj)` combined with `Array.prototype.reduce()` to convert flattened path node to a leaf node.
+If the value of a key contains a dot delimiter (`.`), use `Array.prototype.split('.')`, string transformations and `JSON.parse()` to create an object, then `Object.assign()` to create the leaf node.
+Otherwise, add the appropriate key-value pair to the accumulator object.
+
+```js
+const unflattenObject = obj =>
+  Object.keys(obj).reduce((acc, k) => {
+    if (k.indexOf('.') !== -1) {
+      const keys = k.split('.');
+      Object.assign(
+        acc,
+        JSON.parse(
+          '{' +
+            keys.map((v, i) => (i !== keys.length - 1 ? `"${v}":{` : `"${v}":`)).join('') +
+            obj[k] +
+            '}'.repeat(keys.length)
+        )
+      );
+    } else acc[k] = obj[k];
+    return acc;
+  }, {});
+```
+
+```js
+unflattenObject({ 'a.b.c': 1, d: 1 }); // { a: { b: { c: 1 } }, d: 1 }
+```
+
 </details>
 
 ## 📜 string
@@ -5014,6 +5462,85 @@ toTitleCase('some_database_field_name'); // 'Some Database Field Name'
 toTitleCase('Some label that needs to be title-cased'); // 'Some Label That Needs To Be Title Cased'
 toTitleCase('some-package-name'); // 'Some Package Name'
 toTitleCase('some-mixed_string with spaces_underscores-and-hyphens'); // 'Some Mixed String With Spaces Underscores And Hyphens'
+```
+
+### truncateString
+
+Truncates a string up to a specified length.
+
+Determine if the string's `length` is greater than `num`.
+Return the string truncated to the desired length, with `'...'` appended to the end or the original string.
+
+```js
+const truncateString = (str, num) =>
+  str.length > num ? str.slice(0, num > 3 ? num - 3 : num) + '...' : str;
+```
+
+```js
+truncateString('boomerang', 7); // 'boom...'
+```
+
+### unescapeHTML
+
+Unescapes escaped HTML characters.
+
+Use `String.prototype.replace()` with a regex that matches the characters that need to be unescaped, using a callback function to replace each escaped character instance with its associated unescaped character using a dictionary (object).
+
+```js
+const unescapeHTML = str =>
+  str.replace(
+    /&amp;|&lt;|&gt;|&#39;|&quot;/g,
+    tag =>
+      ({
+        '&amp;': '&',
+        '&lt;': '<',
+        '&gt;': '>',
+        '&#39;': "'",
+        '&quot;': '"'
+      }[tag] || tag)
+  );
+```
+
+```js
+unescapeHTML('&lt;a href=&quot;#&quot;&gt;Me &amp; you&lt;/a&gt;'); // '<a href="#">Me & you</a>'
+```
+
+### URLJoin
+
+Joins all given URL segments together, then normalizes the resulting URL.
+
+Use `String.prototype.join('/')` to combine URL segments, then a series of `String.prototype.replace()` calls with various regexps to normalize the resulting URL (remove double slashes, add proper slashes for protocol, remove slashes before parameters, combine parameters with `'&'` and normalize first parameter delimiter).
+
+```js
+const URLJoin = (...args) =>
+  args
+    .join('/')
+    .replace(/[\/]+/g, '/')
+    .replace(/^(.+):\//, '$1://')
+    .replace(/^file:/, 'file:/')
+    .replace(/\/(\?|&|#[^!])/g, '$1')
+    .replace(/\?/g, '&')
+    .replace('&', '?');
+```
+
+```js
+URLJoin('http://www.google.com', 'a', '/b/cd', '?foo=123', '?bar=foo'); // 'http://www.google.com/a/b/cd?foo=123&bar=foo'
+```
+
+### words
+
+Converts a given string into an array of words.
+
+Use `String.prototype.split()` with a supplied pattern (defaults to non-alpha as a regexp) to convert to an array of strings. Use `Array.prototype.filter()` to remove any empty strings.
+Omit the second argument to use the default regexp.
+
+```js
+const words = (str, pattern = /[^a-zA-Z-]+/) => str.split(pattern).filter(Boolean);
+```
+
+```js
+words('I love javaScript!!'); // ["I", "love", "javaScript"]
+words('python, javaScript & coffee'); // ["python", "javaScript", "coffee"]
 ```
 
 </details>
@@ -5727,6 +6254,41 @@ const toOrdinalSuffix = num => {
 
 ```js
 toOrdinalSuffix('123'); // "123rd"
+```
+
+### validateNumber
+
+Returns `true` if the given value is a number, `false` otherwise.
+
+Use `!isNaN()` in combination with `parseFloat()` to check if the argument is a number.
+Use `isFinite()` to check if the number is finite.
+Use `Number()` to check if the coercion holds.
+
+```js
+const validateNumber = n => !isNaN(parseFloat(n)) && isFinite(n) && Number(n) == n;
+```
+
+```js
+validateNumber('10'); // true
+```
+
+### yesNo
+
+Returns `true` if the string is `y`/`yes` or `false` if the string is `n`/`no`.
+
+Use `RegExp.test()` to check if the string evaluates to `y/yes` or `n/no`.
+Omit the second argument, `def` to set the default answer as `no`.
+
+```js
+const yesNo = (val, def = false) =>
+  /^(y|yes)$/i.test(val) ? true : /^(n|no)$/i.test(val) ? false : def;
+```
+
+```js
+yesNo('Y'); // true
+yesNo('yes'); // true
+yesNo('No'); // false
+yesNo('Foo', true); // true
 ```
 
 </details>
