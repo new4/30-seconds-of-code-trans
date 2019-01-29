@@ -1354,6 +1354,154 @@ const arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const stable = stableSort(arr, () => 0); // [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 ```
 
+### symmetricDifference
+
+返回两个数组之间的差异，不过滤掉重复的值
+
+```js
+const symmetricDifference = (a, b) => {
+  const sA = new Set(a),
+    sB = new Set(b);
+  return [...a.filter(x => !sB.has(x)), ...b.filter(x => !sA.has(x))];
+};
+```
+
+```js
+symmetricDifference([1, 2, 3], [1, 2, 4]); // [3, 4]
+symmetricDifference([1, 2, 2], [1, 3, 1]); // [2, 2, 3]
+```
+
+### symmetricDifferenceBy
+
+将提供的函数应用于两个数组的每个数组元素后，返回两个数组之间的对称差异
+
+```js
+const symmetricDifferenceBy = (a, b, fn) => {
+  const sA = new Set(a.map(v => fn(v))),
+    sB = new Set(b.map(v => fn(v)));
+  return [...a.filter(x => !sB.has(fn(x))), ...b.filter(x => !sA.has(fn(x)))];
+};
+```
+
+```js
+symmetricDifferenceBy([2.1, 1.2], [2.3, 3.4], Math.floor); // [ 1.2, 3.4 ]
+```
+
+### symmetricDifferenceWith
+
+将提供的函数应用于两个数组的每个数组元素后，返回两个数组之间的对称差异
+
+```js
+const symmetricDifferenceWith = (arr, val, comp) => [
+  ...arr.filter(a => val.findIndex(b => comp(a, b)) === -1),
+  ...val.filter(a => arr.findIndex(b => comp(a, b)) === -1)
+];
+```
+
+```js
+symmetricDifferenceWith(
+  [1, 1.2, 1.5, 3, 0],
+  [1.9, 3, 0, 3.9],
+  (a, b) => Math.round(a) === Math.round(b)
+); // [1, 1.2, 3.9]
+```
+
+### tail
+
+返回数组中除第一个元素以外的元素，如果只有一个元素则返回原数组
+
+```js
+const tail = arr => (arr.length > 1 ? arr.slice(1) : arr);
+```
+
+```js
+tail([1, 2, 3]); // [2,3]
+tail([1]); // [1]
+```
+
+### take
+
+取数组的前 `n` 个元素返回
+
+```js
+const take = (arr, n = 1) => arr.slice(0, n);
+```
+
+```js
+take([1, 2, 3], 5); // [1, 2, 3]
+take([1, 2, 3], 0); // []
+```
+
+### takeRight
+
+取数组的后 `n` 个元素返回
+
+```js
+const takeRight = (arr, n = 1) => arr.slice(arr.length - n, arr.length);
+```
+
+```js
+takeRight([1, 2, 3], 2); // [ 2, 3 ]
+takeRight([1, 2, 3]); // [3]
+```
+
+### takeRightWhile
+
+取不满足某一要求的数组的后 `n` 个元素返回
+
+```js
+const takeRightWhile = (arr, func) =>
+  arr.reduceRight((acc, el) => (func(el) ? acc : [el, ...acc]), []);
+```
+
+```js
+takeRightWhile([1, 2, 3, 4], n => n < 3); // [3, 4]
+```
+
+### takeWhile
+
+取不满足某一要求的数组的前 `n` 个元素返回
+
+```js
+const takeWhile = (arr, func) => {
+  for (const [i, val] of arr.entries()) if (func(val)) return arr.slice(0, i);
+  return arr;
+};
+```
+
+```js
+takeWhile([1, 2, 3, 4], n => n >= 3); // [1, 2]
+```
+
+### toHash
+
+将类数组对象改成键值对哈希格式
+
+```js
+const toHash = (object, key) =>
+  Array.prototype.reduce.call(
+    object,
+    (acc, data, index) => ((acc[!key ? index : data[key]] = data), acc),
+    {}
+  );
+```
+
+```js
+toHash([4, 3, 2, 1]); // { 0: 4, 1: 3, 2: 2, 3: 1 }
+toHash([{ a: 'label' }], 'a'); // { label: { a: 'label' } }
+// A more in depth example:
+let users = [{ id: 1, first: 'Jon' }, { id: 2, first: 'Joe' }, { id: 3, first: 'Moe' }];
+let managers = [{ manager: 1, employees: [2, 3] }];
+// We use function here because we want a bindable reference, but a closure referencing the hash would work, too.
+managers.forEach(
+  manager =>
+    (manager.employees = manager.employees.map(function(id) {
+      return this[id];
+    }, toHash(users, 'id')))
+);
+managers; // [ { manager:1, employees: [ { id: 2, first: "Joe" }, { id: 3, first: "Moe" } ] } ]
+```
+
 </details>
 
 ## 🌐 browser
@@ -2050,6 +2198,38 @@ smoothScroll('#fooBar'); // scrolls smoothly to the element with the id fooBar
 smoothScroll('.fooBar'); // scrolls smoothly to the first element with a class of fooBar
 ```
 
+### toggleClass
+
+toggle 元素的 class
+
+使用 [`element.classList.toggle()`](https://developer.mozilla.org/zh-CN/docs/Web/API/Element/classList)
+
+```js
+const toggleClass = (el, className) => el.classList.toggle(className);
+```
+
+```js
+toggleClass(document.querySelector('p.special'), 'special'); // The paragraph will not have the 'special' class anymore
+```
+
+### triggerEvent
+
+在给定元素上触发特定事件，可以传递数据
+
+使用 [`new CustomEvent()`](https://developer.mozilla.org/zh-CN/docs/Web/API/CustomEvent)
+
+使用 [`el.dispatchEvent()`](https://developer.mozilla.org/zh-CN/docs/Web/API/EventTarget/dispatchEvent)
+
+```js
+const triggerEvent = (el, eventType, detail) =>
+  el.dispatchEvent(new CustomEvent(eventType, { detail }));
+```
+
+```js
+triggerEvent(document.getElementById('myId'), 'click');
+triggerEvent(document.getElementById('myId'), 'click', { username: 'bob' });
+```
+
 </details>
 
 ## ⏱️ date
@@ -2220,6 +2400,26 @@ const array = [
   new Date(2016, 0, 9)
 ];
 minDate(array); // 2016-01-08T22:00:00.000Z
+```
+
+### tomorrow
+
+返回明天的日期字串
+
+```js
+const tomorrow = (long = false) => {
+  let t = new Date();
+  t.setDate(t.getDate() + 1);
+  const ret = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(
+    t.getDate()
+  ).padStart(2, '0')}`;
+  return !long ? ret : `${ret}T00:00:00`;
+};
+```
+
+```js
+tomorrow(); // 2017-12-27 (if current date is 2017-12-26)
+tomorrow(true); // 2017-12-27T00:00:00 (if current date is 2017-12-26)
 ```
 
 </details>
@@ -2642,6 +2842,62 @@ async function sleepyWork() {
   await sleep(1000);
   console.log('I woke up after 1 second.');
 }
+```
+
+### throttle
+
+节流函数。在 `wait` 时间内最多调用一次函数。
+
+使用 `setTimeout()` 和 `clearTimeout()` 来对函数 `fn` 节流
+
+```js
+const throttle = (fn, wait) => {
+  let inThrottle, lastFn, lastTime;
+  return function() {
+    const context = this,
+      args = arguments;
+    if (!inThrottle) {
+      fn.apply(context, args);
+      lastTime = Date.now();
+      inThrottle = true;
+    } else {
+      clearTimeout(lastFn);
+      lastFn = setTimeout(function() {
+        if (Date.now() - lastTime >= wait) {
+          fn.apply(context, args);
+          lastTime = Date.now();
+        }
+      }, Math.max(wait - (Date.now() - lastTime), 0));
+    }
+  };
+};
+```
+
+```js
+window.addEventListener(
+  'resize',
+  throttle(function(evt) {
+    console.log(window.innerWidth);
+    console.log(window.innerHeight);
+  }, 250)
+); // Will log the window dimensions at most every 250ms
+```
+
+### times
+
+迭代调用函数 `n` 次，`n` 次后或者函数返回 `false` 的话就停止调用
+
+```js
+const times = (n, fn, context = undefined) => {
+  let i = 0;
+  while (fn.call(context, i) !== false && ++i < n) {}
+};
+```
+
+```js
+var output = '';
+times(5, i => (output += i));
+console.log(output); // 01234
 ```
 
 </details>
@@ -3211,6 +3467,88 @@ const sdbm = str => {
 
 ```js
 sdbm('name'); // -3521204949
+```
+
+### standardDeviation
+
+返回数组数组的标准偏差
+
+```js
+const standardDeviation = (arr, usePopulation = false) => {
+  const mean = arr.reduce((acc, val) => acc + val, 0) / arr.length;
+  return Math.sqrt(
+    arr.reduce((acc, val) => acc.concat((val - mean) ** 2), []).reduce((acc, val) => acc + val, 0) /
+      (arr.length - (usePopulation ? 0 : 1))
+  );
+};
+```
+
+```js
+standardDeviation([10, 2, 38, 23, 38, 23, 21]); // 13.284434142114991 (sample)
+standardDeviation([10, 2, 38, 23, 38, 23, 21], true); // 12.29899614287479 (population)
+```
+
+### sum
+
+求和
+
+```js
+const sum = (...arr) => [...arr].reduce((acc, val) => acc + val, 0);
+```
+
+```js
+sum(1, 2, 3, 4); // 10
+sum(...[1, 2, 3, 4]); // 10
+```
+
+### sumBy
+
+按照 `fn` 规则求和
+
+```js
+const sumBy = (arr, fn) =>
+  arr.map(typeof fn === 'function' ? fn : val => val[fn]).reduce((acc, val) => acc + val, 0);
+```
+
+```js
+sumBy([{ n: 4 }, { n: 2 }, { n: 8 }, { n: 6 }], o => o.n); // 20
+sumBy([{ n: 4 }, { n: 2 }, { n: 8 }, { n: 6 }], 'n'); // 20
+```
+
+### sumPower
+
+求次方和，默认平方和
+
+```js
+const sumPower = (end, power = 2, start = 1) =>
+  Array(end + 1 - start)
+    .fill(0)
+    .map((x, i) => (i + start) ** power)
+    .reduce((a, b) => a + b, 0);
+```
+
+```js
+sumPower(10); // 385
+sumPower(10, 3); // 3025
+sumPower(10, 3, 5); // 2925
+```
+
+### toSafeInteger
+
+将数字转化成安全的整数
+
+`Number.MAX_SAFE_INTEGER`
+
+`Number.MIN_SAFE_INTEGER`
+
+```js
+const toSafeInteger = num =>
+  Math.round(Math.max(Math.min(num, Number.MAX_SAFE_INTEGER), Number.MIN_SAFE_INTEGER));
+```
+
+```js
+toSafeInteger('3.2'); // 3
+toSafeInteger(Infinity); // 9007199254740991
 ```
 
 </details>
@@ -4136,6 +4474,25 @@ size('size'); // 4
 size({ one: 1, two: 2, three: 3 }); // 3
 ```
 
+### transform
+
+对累加器和对象中的每个键应用一个函数（从左到右）。
+
+```js
+const transform = (obj, fn, acc) => Object.keys(obj).reduce((a, k) => fn(a, obj[k], k, obj), acc);
+```
+
+```js
+transform(
+  { a: 1, b: 2, c: 1 },
+  (r, v, k) => {
+    (r[v] || (r[v] = [])).push(k);
+    return r;
+  },
+  {}
+); // { '1': ['a', 'c'], '2': ['b'] }
+```
+
 </details>
 
 ## 📜 string
@@ -4536,6 +4893,127 @@ const splitLines = str => str.split(/\r?\n/);
 
 ```js
 splitLines('This\nis a\nmultiline\nstring.\n'); // ['This', 'is a', 'multiline', 'string.' , '']
+```
+
+### stringPermutations
+
+**会有性能问题**
+
+生成字符串的所有排列（包含重复项）
+
+```js
+const stringPermutations = str => {
+  if (str.length <= 2) return str.length === 2 ? [str, str[1] + str[0]] : [str];
+  return str
+    .split('')
+    .reduce(
+      (acc, letter, i) =>
+        acc.concat(stringPermutations(str.slice(0, i) + str.slice(i + 1)).map(val => letter + val)),
+      []
+    );
+};
+```
+
+```js
+stringPermutations('abc'); // ['abc','acb','bac','bca','cab','cba']
+```
+
+### stripHTMLTags
+
+移除字串中的 `HTML/XML` 标签
+
+```js
+const stripHTMLTags = str => str.replace(/<[^>]*>/g, '');
+```
+
+```js
+stripHTMLTags('<p><em>lorem</em> <strong>ipsum</strong></p>'); // 'lorem ipsum'
+```
+
+### toCamelCase
+
+将字符串转化成驼峰形式
+
+```js
+const toCamelCase = str => {
+  let s =
+    str &&
+    str
+      .match(/[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+/g)
+      .map(x => x.slice(0, 1).toUpperCase() + x.slice(1).toLowerCase())
+      .join('');
+  return s.slice(0, 1).toLowerCase() + s.slice(1);
+};
+```
+
+```js
+toCamelCase('some_database_field_name'); // 'someDatabaseFieldName'
+toCamelCase('Some label that needs to be camelized'); // 'someLabelThatNeedsToBeCamelized'
+toCamelCase('some-javascript-property'); // 'someJavascriptProperty'
+toCamelCase('some-mixed_string with spaces_underscores-and-hyphens'); // 'someMixedStringWithSpacesUnderscoresAndHyphens'
+```
+
+### toKebabCase
+
+将字串转成 `KebabCase` 形式
+
+```js
+const toKebabCase = str =>
+  str &&
+  str
+    .match(/[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+/g)
+    .map(x => x.toLowerCase())
+    .join('-');
+```
+
+```js
+toKebabCase('camelCase'); // 'camel-case'
+toKebabCase('some text'); // 'some-text'
+toKebabCase('some-mixed_string With spaces_underscores-and-hyphens'); // 'some-mixed-string-with-spaces-underscores-and-hyphens'
+toKebabCase('AllThe-small Things'); // "all-the-small-things"
+toKebabCase('IAmListeningToFMWhileLoadingDifferentURLOnMyBrowserAndAlsoEditingSomeXMLAndHTML'); // "i-am-listening-to-fm-while-loading-different-url-on-my-browser-and-also-editing-xml-and-html"
+```
+
+### toSnakeCase
+
+将字串转换成`snake case`
+
+```js
+const toSnakeCase = str =>
+  str &&
+  str
+    .match(/[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+/g)
+    .map(x => x.toLowerCase())
+    .join('_');
+```
+
+```js
+toSnakeCase('camelCase'); // 'camel_case'
+toSnakeCase('some text'); // 'some_text'
+toSnakeCase('some-mixed_string With spaces_underscores-and-hyphens'); // 'some_mixed_string_with_spaces_underscores_and_hyphens'
+toSnakeCase('AllThe-small Things'); // "all_the_smal_things"
+toSnakeCase('IAmListeningToFMWhileLoadingDifferentURLOnMyBrowserAndAlsoEditingSomeXMLAndHTML'); // "i_am_listening_to_fm_while_loading_different_url_on_my_browser_and_also_editing_some_xml_and_html"
+```
+
+### toTitleCase
+
+将字串转化成 `title case`
+
+分割成首字母大写的单词
+
+```js
+const toTitleCase = str =>
+  str
+    .match(/[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+/g)
+    .map(x => x.charAt(0).toUpperCase() + x.slice(1))
+    .join(' ');
+```
+
+```js
+toTitleCase('some_database_field_name'); // 'Some Database Field Name'
+toTitleCase('Some label that needs to be title-cased'); // 'Some Label That Needs To Be Title Cased'
+toTitleCase('some-package-name'); // 'Some Package Name'
+toTitleCase('some-mixed_string with spaces_underscores-and-hyphens'); // 'Some Mixed String With Spaces Underscores And Hyphens'
 ```
 
 </details>
@@ -5180,6 +5658,75 @@ const serializeCookie = (name, val) => `${encodeURIComponent(name)}=${encodeURIC
 
 ```js
 serializeCookie('foo', 'bar'); // 'foo=bar'
+```
+
+### timeTaken
+
+计算函数调用花费的时间
+
+```js
+const timeTaken = callback => {
+  console.time('timeTaken');
+  const r = callback();
+  console.timeEnd('timeTaken');
+  return r;
+};
+```
+
+```js
+timeTaken(() => Math.pow(2, 10)); // 1024, (logged): timeTaken: 0.02099609375ms
+```
+
+### toCurrency
+
+货币格式表示
+
+使用 [`Intl.NumberFormat`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/NumberFormat)
+
+```js
+const toCurrency = (n, curr, LanguageFormat = undefined) =>
+  Intl.NumberFormat(LanguageFormat, { style: 'currency', currency: curr }).format(n);
+```
+
+```js
+toCurrency(123456.789, 'EUR'); // €123,456.79  | currency: Euro | currencyLangFormat: Local
+toCurrency(123456.789, 'USD', 'en-us'); // $123,456.79  | currency: US Dollar | currencyLangFormat: English (United States)
+toCurrency(123456.789, 'USD', 'fa'); // ۱۲۳٬۴۵۶٫۷۹ ؜$ | currency: US Dollar | currencyLangFormat: Farsi
+toCurrency(322342436423.2435, 'JPY'); // ¥322,342,436,423 | currency: Japanese Yen | currencyLangFormat: Local
+toCurrency(322342436423.2435, 'JPY', 'fi'); // 322 342 436 423 ¥ | currency: Japanese Yen | currencyLangFormat: Finnish
+```
+
+### toDecimalMark
+
+使用 `toLocaleString()` 转化浮点格式为 [Decimal mark](https://en.wikipedia.org/wiki/Decimal_mark) 形式. 
+
+ ```js
+const toDecimalMark = num => num.toLocaleString('en-US');
+```
+
+```js
+toDecimalMark(12305030388.9087); // "12,305,030,388.909"
+```
+
+### toOrdinalSuffix
+
+给数字加上后缀
+
+```js
+const toOrdinalSuffix = num => {
+  const int = parseInt(num),
+    digits = [int % 10, int % 100],
+    ordinals = ['st', 'nd', 'rd', 'th'],
+    oPattern = [1, 2, 3, 4],
+    tPattern = [11, 12, 13, 14, 15, 16, 17, 18, 19];
+  return oPattern.includes(digits[0]) && !tPattern.includes(digits[1])
+    ? int + ordinals[digits[0] - 1]
+    : int + ordinals[3];
+};
+```
+
+```js
+toOrdinalSuffix('123'); // "123rd"
 ```
 
 </details>
